@@ -1862,11 +1862,7 @@
 
   function renderChart(
     data,
-    granularity =
-      document.getElementById(
-        "granularity"
-      )?.value ||
-      "Daily"
+    range = null
   ) {
     const panel =
       findPanel(
@@ -1894,8 +1890,15 @@
         ? data.traffic_daily
         : [];
 
+    const requestedDays =
+      Number(
+        range?.days ||
+        raw.length ||
+        1
+      );
+
     const effectiveGranularity =
-      raw.length > 45
+      requestedDays > 45
         ? "Weekly"
         : "Daily";
 
@@ -2281,39 +2284,50 @@
 
 
     const labelIndexes =
-      [
-        0,
-        Math.floor(
-          (
+      rows.length <= 10
+        ? rows.map(
+            (
+              _,
+              index
+            ) => index
+          )
+        : [
+            0,
+
+            Math.floor(
+              (
+                rows.length -
+                1
+              ) * 0.25
+            ),
+
+            Math.floor(
+              (
+                rows.length -
+                1
+              ) * 0.5
+            ),
+
+            Math.floor(
+              (
+                rows.length -
+                1
+              ) * 0.75
+            ),
+
             rows.length -
-            1
-          ) * 0.25
-        ),
-        Math.floor(
-          (
-            rows.length -
-            1
-          ) * 0.5
-        ),
-        Math.floor(
-          (
-            rows.length -
-            1
-          ) * 0.75
-        ),
-        rows.length -
-          1
-      ]
-      .filter(
-        (
-          value,
-          index,
-          array
-        ) =>
-          array.indexOf(
-            value
-          ) === index
-      );
+              1
+          ]
+          .filter(
+            (
+              value,
+              index,
+              array
+            ) =>
+              array.indexOf(
+                value
+              ) === index
+          );
 
 
     dates.innerHTML =
@@ -2443,7 +2457,10 @@
       data,
       range
     );
-    renderChart(data);
+    renderChart(
+      data,
+      range
+    );
 
     document.documentElement
       .dataset
@@ -2457,17 +2474,48 @@
   // ==========================================================
 
   async function loadDashboard(
-    period = "7d"
+    period = "7d",
+    customFrom = null,
+    customTo = null
   ) {
     const thisRequest =
       ++requestId;
 
     try {
+      const params =
+        new URLSearchParams();
+
+      params.set(
+        "period",
+        period
+      );
+
+      if (
+        period === "custom"
+      ) {
+        if (
+          !customFrom ||
+          !customTo
+        ) {
+          throw new Error(
+            "Custom range requires From and To dates"
+          );
+        }
+
+        params.set(
+          "from",
+          customFrom
+        );
+
+        params.set(
+          "to",
+          customTo
+        );
+      }
+
       const response =
         await fetch(
-          `${API}?period=${encodeURIComponent(
-            period
-          )}`,
+          `${API}?${params.toString()}`,
           {
             method: "GET",
             mode: "cors",
@@ -2542,47 +2590,621 @@
   // PERIOD CONTROL
   // ==========================================================
 
-  document
-    .querySelectorAll(
-      ".period button"
+  // ==========================================================
+  // GLOBAL PERIOD CONTROL
+  // Today / 7D / 30D / 90D / Custom
+  // One selected period drives the WHOLE dashboard.
+  // ==========================================================
+
+  const periodButtons =
+    [
+      ...document.querySelectorAll(
+        ".period button"
+      )
+    ];
+
+  const customButton =
+    periodButtons.find(
+      button =>
+        button.dataset.period ===
+        "Custom"
+    );
+
+  let lastPresetPeriod =
+    document.querySelector(
+      '.period button.active:not([data-period="Custom"])'
+    )?.dataset.period ||
+    "7D";
+
+
+  function activatePeriodButton(
+    target
+  ) {
+    periodButtons.forEach(
+      button =>
+        button.classList.toggle(
+          "active",
+          button === target
+        )
+    );
+  }
+
+
+  function utcTodayString() {
+    return new Date()
+      .toISOString()
+      .slice(
+        0,
+        10
+      );
+  }
+
+
+  function shiftIsoDate(
+    iso,
+    deltaDays
+  ) {
+    const date =
+      new Date(
+        `${iso}T00:00:00Z`
+      );
+
+    date.setUTCDate(
+      date.getUTCDate() +
+      deltaDays
+    );
+
+    return date
+      .toISOString()
+      .slice(
+        0,
+        10
+      );
+  }
+
+
+  function formatCustomButtonLabel(
+    from,
+    to
+  ) {
+    function shortDate(
+      iso
+    ) {
+      const d =
+        new Date(
+          `${iso}T00:00:00Z`
+        );
+
+      return d.toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC"
+        }
+      );
+    }
+
+    return (
+      shortDate(from) +
+      "–" +
+      shortDate(to)
+    );
+  }
+
+
+  // ----------------------------------------------------------
+  // Build Custom Range modal.
+  // ----------------------------------------------------------
+
+  const customRangeStyle =
+    document.createElement(
+      "style"
+    );
+
+  customRangeStyle.textContent = `
+    .pi-custom-range {
+      position: fixed;
+      inset: 0;
+      z-index: 10050;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 110px;
+      background: rgba(15,31,56,.18);
+      backdrop-filter: blur(3px);
+    }
+
+    .pi-custom-range.open {
+      display: flex;
+    }
+
+    .pi-custom-range__card {
+      width: min(440px, calc(100vw - 32px));
+      background: #fff;
+      border: 1px solid #e3e8ef;
+      border-radius: 16px;
+      box-shadow: 0 24px 70px rgba(15,31,56,.18);
+      padding: 20px;
+      color: #13203a;
+    }
+
+    .pi-custom-range__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .pi-custom-range__top h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .pi-custom-range__close {
+      border: 0;
+      background: transparent;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      color: #7b8798;
+    }
+
+    .pi-custom-range__dates {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .pi-custom-range__field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #778398;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .pi-custom-range__field input {
+      box-sizing: border-box;
+      width: 100%;
+      height: 42px;
+      border: 1px solid #dce3ec;
+      border-radius: 10px;
+      background: #fff;
+      color: #13203a;
+      padding: 0 10px;
+      font: inherit;
+      outline: none;
+    }
+
+    .pi-custom-range__arrow {
+      padding-bottom: 11px;
+      color: #8895a7;
+    }
+
+    .pi-custom-range__error {
+      min-height: 18px;
+      margin-top: 9px;
+      color: #d94d4d;
+      font-size: 11px;
+    }
+
+    .pi-custom-range__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .pi-custom-range__actions button {
+      height: 38px;
+      border-radius: 9px;
+      padding: 0 16px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pi-custom-range__cancel {
+      border: 1px solid #dce3ec;
+      background: #fff;
+      color: #526078;
+    }
+
+    .pi-custom-range__apply {
+      border: 1px solid #0f1f38;
+      background: #0f1f38;
+      color: #fff;
+    }
+
+    @media (max-width: 620px) {
+      .pi-custom-range {
+        padding-top: 70px;
+      }
+
+      .pi-custom-range__dates {
+        grid-template-columns: 1fr;
+      }
+
+      .pi-custom-range__arrow {
+        display: none;
+      }
+    }
+  `;
+
+  document.head.appendChild(
+    customRangeStyle
+  );
+
+
+  const customRange =
+    document.createElement(
+      "div"
+    );
+
+  customRange.className =
+    "pi-custom-range";
+
+  customRange.innerHTML = `
+    <div
+      class="pi-custom-range__card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="piCustomRangeTitle"
+    >
+      <div class="pi-custom-range__top">
+        <h3 id="piCustomRangeTitle">
+          Custom date range
+        </h3>
+
+        <button
+          class="pi-custom-range__close"
+          type="button"
+          aria-label="Close"
+        >×</button>
+      </div>
+
+      <div class="pi-custom-range__dates">
+
+        <div class="pi-custom-range__field">
+          <label for="piCustomFrom">
+            From
+          </label>
+
+          <input
+            id="piCustomFrom"
+            type="date"
+          >
+        </div>
+
+        <div class="pi-custom-range__arrow">
+          →
+        </div>
+
+        <div class="pi-custom-range__field">
+          <label for="piCustomTo">
+            To
+          </label>
+
+          <input
+            id="piCustomTo"
+            type="date"
+          >
+        </div>
+
+      </div>
+
+      <div
+        class="pi-custom-range__error"
+        aria-live="polite"
+      ></div>
+
+      <div class="pi-custom-range__actions">
+
+        <button
+          class="pi-custom-range__cancel"
+          type="button"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="pi-custom-range__apply"
+          type="button"
+        >
+          Apply
+        </button>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(
+    customRange
+  );
+
+
+  const customFrom =
+    customRange.querySelector(
+      "#piCustomFrom"
+    );
+
+  const customTo =
+    customRange.querySelector(
+      "#piCustomTo"
+    );
+
+  const customError =
+    customRange.querySelector(
+      ".pi-custom-range__error"
+    );
+
+
+  function closeCustomRange(
+    restorePreset = false
+  ) {
+    customRange.classList.remove(
+      "open"
+    );
+
+    if (
+      restorePreset &&
+      customButton?.classList.contains(
+        "active"
+      )
+    ) {
+      const previous =
+        periodButtons.find(
+          button =>
+            button.dataset.period ===
+            lastPresetPeriod
+        );
+
+      if (previous) {
+        activatePeriodButton(
+          previous
+        );
+      }
+    }
+  }
+
+
+  function openCustomRange() {
+    const today =
+      utcTodayString();
+
+    customFrom.max =
+      today;
+
+    customTo.max =
+      today;
+
+    if (!customTo.value) {
+      customTo.value =
+        today;
+    }
+
+    if (!customFrom.value) {
+      customFrom.value =
+        shiftIsoDate(
+          customTo.value,
+          -6
+        );
+    }
+
+    customError.textContent =
+      "";
+
+    customRange.classList.add(
+      "open"
+    );
+
+    setTimeout(
+      () =>
+        customFrom.focus(),
+      0
+    );
+  }
+
+
+  customRange
+    .querySelector(
+      ".pi-custom-range__close"
     )
-    .forEach(button => {
+    .addEventListener(
+      "click",
+      () =>
+        closeCustomRange(
+          true
+        )
+    );
+
+
+  customRange
+    .querySelector(
+      ".pi-custom-range__cancel"
+    )
+    .addEventListener(
+      "click",
+      () =>
+        closeCustomRange(
+          true
+        )
+    );
+
+
+  customRange.addEventListener(
+    "click",
+    event => {
+      if (
+        event.target ===
+        customRange
+      ) {
+        closeCustomRange(
+          true
+        );
+      }
+    }
+  );
+
+
+  customRange
+    .querySelector(
+      ".pi-custom-range__apply"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        const from =
+          customFrom.value;
+
+        const to =
+          customTo.value;
+
+        if (
+          !from ||
+          !to
+        ) {
+          customError.textContent =
+            "Choose both dates.";
+          return;
+        }
+
+        const fromMs =
+          Date.parse(
+            `${from}T00:00:00Z`
+          );
+
+        const toMs =
+          Date.parse(
+            `${to}T00:00:00Z`
+          );
+
+        const todayMs =
+          Date.parse(
+            `${utcTodayString()}T00:00:00Z`
+          );
+
+        if (
+          !Number.isFinite(fromMs) ||
+          !Number.isFinite(toMs)
+        ) {
+          customError.textContent =
+            "Invalid date range.";
+          return;
+        }
+
+        if (
+          toMs <
+          fromMs
+        ) {
+          customError.textContent =
+            "To date cannot be before From date.";
+          return;
+        }
+
+        if (
+          toMs >
+          todayMs
+        ) {
+          customError.textContent =
+            "Future dates are not available.";
+          return;
+        }
+
+        const days =
+          Math.floor(
+            (
+              toMs -
+              fromMs
+            ) /
+            86400000
+          ) +
+          1;
+
+        if (
+          days >
+          120
+        ) {
+          customError.textContent =
+            "Maximum custom range is 120 days.";
+          return;
+        }
+
+        customError.textContent =
+          "";
+
+        activatePeriodButton(
+          customButton
+        );
+
+        if (customButton) {
+          customButton.textContent =
+            formatCustomButtonLabel(
+              from,
+              to
+            );
+        }
+
+        closeCustomRange(
+          false
+        );
+
+        loadDashboard(
+          "custom",
+          from,
+          to
+        );
+      }
+    );
+
+
+  // ----------------------------------------------------------
+  // Preset period buttons.
+  // ----------------------------------------------------------
+
+  periodButtons.forEach(
+    button => {
 
       button.addEventListener(
         "click",
         () => {
+
+          const rawPeriod =
+            button.dataset.period;
+
+          if (
+            rawPeriod ===
+            "Custom"
+          ) {
+            openCustomRange();
+            return;
+          }
+
+          lastPresetPeriod =
+            rawPeriod;
+
+          if (customButton) {
+            customButton.textContent =
+              "Custom ◫";
+          }
+
           loadDashboard(
             periodKey(
-              button.dataset.period
+              rawPeriod
             )
           );
         }
       );
-    });
-
-
-  // ==========================================================
-  // GRANULARITY CONTROL
-  // ==========================================================
-
-  const granularity =
-    document.getElementById(
-      "granularity"
-    );
-
-  if (granularity) {
-    granularity.addEventListener(
-      "change",
-      () => {
-        if (lastPayload) {
-          renderChart(
-            lastPayload,
-            granularity.value
-          );
-        }
-      }
-    );
-  }
+    }
+  );
 
 
   // ==========================================================
