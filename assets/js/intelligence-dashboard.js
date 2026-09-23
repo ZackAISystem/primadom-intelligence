@@ -1894,10 +1894,15 @@
         ? data.traffic_daily
         : [];
 
+    const effectiveGranularity =
+      raw.length > 45
+        ? "Weekly"
+        : "Daily";
+
     const rows =
       aggregateTraffic(
         raw,
-        granularity
+        effectiveGranularity
       );
 
     if (!rows.length) {

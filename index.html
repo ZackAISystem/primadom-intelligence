@@ -619,7 +619,7 @@ background-size:100% 48px, 78px 100%}
     <div class="panel">
       <div class="panel-head">
         <div class="head-left"><span class="panel-icon">▥</span><h2>Traffic & Visibility Overview</h2></div>
-        <select id="granularity" style="border:1px solid var(--line);border-radius:9px;padding:6px 24px 6px 8px;background:#fff;color:#526078;font-size:10px"><option>Daily</option><option>Weekly</option><option>Monthly</option></select>
+        <input type="hidden" id="granularity" value="Auto">
       </div>
       <div class="legend"><span><i class="dot" style="background:#2d6cdf"></i>Human Visitors</span><span><i class="dot" style="background:#d59631"></i>AI & Bot Requests</span><span><i class="dot" style="background:#14a36a"></i>Leads</span></div>
       <div class="chart-wrap">
@@ -1128,7 +1128,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 });
 </script>
 
-<script src="/assets/js/intelligence-dashboard.js?v=2"></script>
+<script src="/assets/js/intelligence-dashboard.js?v=3"></script>
 
 </body>
 </html>
