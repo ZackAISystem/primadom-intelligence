@@ -543,8 +543,8 @@ background-size:100% 48px, 78px 100%}
     <div class="kpi clickable" data-title="Leads" data-detail="Server-confirmed lead_created conversions. CRM statuses will extend this card later.">
       <div class="kpi-head"><span class="kpi-icon violet">▽</span>Leads</div><div class="kpi-value">17</div><div class="kpi-sub">2.1% conversion · <span class="up">↑ +41.7%</span></div>
     </div>
-    <div class="kpi clickable" data-title="Total Edge Requests" data-detail="All Cloudflare edge requests for Primadom.">
-      <div class="kpi-head"><span class="kpi-icon orange">▧</span>Total Requests</div><div class="kpi-value">24,891</div><div class="kpi-sub"><span class="up">↑ +12.8%</span></div>
+    <div class="kpi clickable" data-title="Edge Unique Visitors" data-detail="Cloudflare unique visitors for the selected period. This is an edge-level metric and is separate from first-party Human Visitors.">
+      <div class="kpi-head"><span class="kpi-icon orange">▧</span>Edge Unique Visitors</div><div class="kpi-value">24,891</div><div class="kpi-sub"><span class="up">↑ +12.8%</span></div>
     </div>
     <div class="kpi clickable" data-title="AI & Bot Requests" data-detail="AI search, assistant fetchers, training bots, search crawlers and SEO bots.">
       <div class="kpi-head"><span class="kpi-icon blue">◉</span>AI & Bot Requests</div><div class="kpi-value">8,441</div><div class="kpi-sub"><span class="up">↑ +25.6%</span></div>
@@ -621,9 +621,9 @@ background-size:100% 48px, 78px 100%}
         <div class="head-left"><span class="panel-icon">▥</span><h2>Traffic & Visibility Overview</h2></div>
         <select id="granularity" style="border:1px solid var(--line);border-radius:9px;padding:6px 24px 6px 8px;background:#fff;color:#526078;font-size:10px"><option>Daily</option><option>Weekly</option><option>Monthly</option></select>
       </div>
-      <div class="legend"><span><i class="dot" style="background:#2d6cdf"></i>Human Visitors</span><span><i class="dot" style="background:#7b5be7"></i>LLM Referrals</span><span><i class="dot" style="background:#d59631"></i>AI Crawlers</span><span><i class="dot" style="background:#14a36a"></i>Leads</span></div>
+      <div class="legend"><span><i class="dot" style="background:#2d6cdf"></i>Human Visitors</span><span><i class="dot" style="background:#d59631"></i>AI & Bot Requests</span><span><i class="dot" style="background:#14a36a"></i>Leads</span></div>
       <div class="chart-wrap">
-        <span class="axis-label left">Visitors / Requests</span><span class="axis-label right">Leads</span>
+        <span class="axis-label left">Visitors / Leads</span><span class="axis-label right">AI / Bot Requests</span>
         <svg viewBox="0 0 1000 292" preserveAspectRatio="none">
           <defs><linearGradient id="bargrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c0dbff" stop-opacity=".92"/><stop offset="1" stop-color="#edf5ff" stop-opacity=".36"/></linearGradient></defs>
           <g fill="url(#bargrad)">
@@ -1128,7 +1128,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 });
 </script>
 
-<script src="/assets/js/intelligence-dashboard.js?v=1"></script>
+<script src="/assets/js/intelligence-dashboard.js?v=2"></script>
 
 </body>
 </html>

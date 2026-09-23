@@ -413,60 +413,180 @@
     const edge =
       data.cloudflare_edge || {};
 
+    const coverage =
+      data.coverage || {};
+
+    const lifecycleContract =
+      data.lifecycle_contract || {};
+
     const label =
       periodLabel(range);
 
+
+    function shortDate(value) {
+      if (!value) {
+        return "—";
+      }
+
+      const d =
+        new Date(
+          `${value}T00:00:00Z`
+        );
+
+      if (
+        Number.isNaN(
+          d.getTime()
+        )
+      ) {
+        return value;
+      }
+
+      return d.toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC"
+        }
+      );
+    }
+
+
+    function coverageText(
+      object,
+      fallback
+    ) {
+      if (
+        !object ||
+        !object.from ||
+        !object.to
+      ) {
+        return fallback;
+      }
+
+      const days =
+        Number(
+          object.days || 0
+        );
+
+      if (
+        object.from === object.to
+      ) {
+        return `${shortDate(
+          object.from
+        )} · 1 day coverage`;
+      }
+
+      return `${shortDate(
+        object.from
+      )}–${shortDate(
+        object.to
+      )} · ${days} day coverage`;
+    }
+
+
+    // ========================================================
+    // TOTAL PAGES
+    // ========================================================
+
     setKpi(
       "Page Network",
-      num(kpis.registered_pages),
-      "Registered · all languages"
+      num(
+        kpis.deployed_pages ??
+        kpis.sitemap_pages
+      ),
+      "Active production"
     );
+
+
+    // ========================================================
+    // HUMAN VISITORS — EXACT DISTINCT visitor_id
+    // ========================================================
 
     setKpi(
       "Human Visitors",
       num(kpis.human_visitors),
-      `${escapeHtml(label)} · first-party`
+      `${escapeHtml(label)} · exact first-party unique`
     );
 
+
+    // ========================================================
+    // LEADS
+    // ========================================================
+
     const visitors =
-      Number(kpis.human_visitors || 0);
+      Number(
+        kpis.human_visitors || 0
+      );
 
     const leads =
-      Number(kpis.leads || 0);
+      Number(
+        kpis.leads || 0
+      );
 
     const conversion =
       visitors > 0
-        ? (leads / visitors) * 100
+        ? (
+            leads /
+            visitors
+          ) * 100
         : 0;
 
     setKpi(
       "Leads",
       num(leads),
-      `${percentValue(conversion)} visitor → lead`
+      `${percentValue(
+        conversion
+      )} visitor → lead`
     );
 
-    if (edge.available) {
+
+    // ========================================================
+    // CLOUDFLARE EDGE UNIQUE VISITORS
+    // ========================================================
+
+    if (
+      Number.isFinite(
+        Number(
+          kpis.edge_unique_visitors
+        )
+      )
+    ) {
       setKpi(
-        "Total Edge Requests",
-        num(edge.requests),
-        `Cloudflare Edge · ${num(edge.available_days)} day coverage`
+        "Edge Unique Visitors",
+        num(
+          kpis.edge_unique_visitors
+        ),
+        `Cloudflare · exact ${escapeHtml(label)} unique`
       );
     } else {
       setKpi(
-        "Total Edge Requests",
+        "Edge Unique Visitors",
         "—",
-        "Cloudflare Edge syncing"
+        "Cloudflare unique data syncing"
       );
     }
 
+
+    // ========================================================
+    // AI / BOT REQUESTS
+    // ========================================================
+
     setKpi(
       "AI & Bot Requests",
-      num(kpis.ai_bot_requests),
-      `${escapeHtml(label)} · crawler layer`
+      num(
+        kpis.ai_bot_requests
+      ),
+      coverageText(
+        coverage.ai_bots,
+        `${label} · crawler layer`
+      )
     );
 
 
-    // Google Search special KPI
+    // ========================================================
+    // GOOGLE SEARCH
+    // ========================================================
 
     const google =
       kpi("Google Search");
@@ -482,39 +602,89 @@
           ".google-trend"
         );
 
-      if (numbers[0]) {
-        numbers[0].textContent =
-          num(kpis.google_impressions);
-      }
+      const gscCoverage =
+        coverage.google_search ||
+        {};
 
-      if (numbers[1]) {
-        numbers[1].textContent =
-          num(kpis.google_clicks);
-      }
+      const hasPeriodData =
+        gscCoverage
+          .has_data_for_period === true;
 
-      if (trends[0]) {
-        trends[0].textContent =
-          `CTR ${percentDecimal(
-            kpis.google_ctr
-          )}`;
-      }
+      const latest =
+        gscCoverage
+          .latest_available;
 
-      if (trends[1]) {
-        trends[1].textContent =
-          Number.isFinite(
+      if (hasPeriodData) {
+        if (numbers[0]) {
+          numbers[0].textContent =
+            num(
+              kpis.google_impressions
+            );
+        }
+
+        if (numbers[1]) {
+          numbers[1].textContent =
+            num(
+              kpis.google_clicks
+            );
+        }
+
+        if (trends[0]) {
+          trends[0].textContent =
+            `CTR ${percentDecimal(
+              kpis.google_ctr
+            )}`;
+        }
+
+        if (trends[1]) {
+          const avg =
             Number(
               kpis.google_avg_position
-            )
-          )
-            ? `Avg pos. ${Number(
-                kpis.google_avg_position
-              ).toFixed(1)}`
-            : "Avg pos. —";
+            );
+
+          trends[1].textContent =
+            Number.isFinite(avg)
+              ? `Avg ${avg.toFixed(
+                  1
+                )} · ${shortDate(
+                  latest
+                )}`
+              : `Data through ${shortDate(
+                  latest
+                )}`;
+        }
+
+      } else {
+        if (numbers[0]) {
+          numbers[0].textContent =
+            "—";
+        }
+
+        if (numbers[1]) {
+          numbers[1].textContent =
+            "—";
+        }
+
+        if (trends[0]) {
+          trends[0].textContent =
+            latest
+              ? `Latest ${shortDate(
+                  latest
+                )}`
+              : "No finalized GSC data";
+        }
+
+        if (trends[1]) {
+          trends[1].textContent =
+            "GSC finalized data";
+        }
       }
     }
 
 
-    // AI Assistant special KPI
+    // ========================================================
+    // AI ASSISTANT
+    // ========================================================
 
     const assistant =
       kpi("AI Assistant");
@@ -525,16 +695,36 @@
           ".assistant-kpi-main b"
         );
 
+      const mainLabel =
+        assistant.querySelector(
+          ".assistant-kpi-main span"
+        );
+
       const stats =
         assistant.querySelectorAll(
           ".assistant-kpi-stats b"
         );
 
+      const conversationTracking =
+        data?.assistant
+          ?.instrumentation
+          ?.conversation_tracking === true;
+
       if (main) {
         main.textContent =
-          num(
-            kpis.assistant_conversations
-          );
+          conversationTracking
+            ? num(
+                kpis
+                  .assistant_conversations
+              )
+            : "—";
+      }
+
+      if (mainLabel) {
+        mainLabel.textContent =
+          conversationTracking
+            ? "Conversations"
+            : "Conversations · pending";
       }
 
       if (stats[0]) {
@@ -553,13 +743,14 @@
     }
 
 
-    // Lifecycle special KPI
-
-    const lifecycle =
-      data.lifecycle || {};
+    // ========================================================
+    // INDEX / LIFECYCLE
+    // ========================================================
 
     const lifecycleCard =
-      kpi("Index / Lifecycle Coverage");
+      kpi(
+        "Index / Lifecycle Coverage"
+      );
 
     if (lifecycleCard) {
       const rows =
@@ -569,40 +760,63 @@
 
       const registered =
         Number(
-          lifecycle.registered_pages ??
-          kpis.registered_pages ??
-          0
+          lifecycleContract
+            ?.registered
+            ?.value || 0
         );
 
       const sitemap =
         Number(
-          lifecycle.sitemap_pages ??
-          kpis.sitemap_pages ??
-          0
+          lifecycleContract
+            ?.sitemap
+            ?.value || 0
         );
 
-      const crawled =
+      const indexed =
         Number(
-          lifecycle.ai_crawled_pages ??
-          0
+          lifecycleContract
+            ?.indexed
+            ?.value || 0
         );
 
-      const visible =
+      const searchVisible =
         Number(
-          lifecycle.google_signal_pages ??
-          lifecycle.impression_pages ??
-          0
+          lifecycleContract
+            ?.search_visible
+            ?.value || 0
         );
 
       const values = [
-        registered,
-        sitemap,
-        crawled,
-        visible
+        {
+          value: registered,
+          label: "Registered",
+          approximate: false
+        },
+        {
+          value: sitemap,
+          label: "Sitemap",
+          approximate: false
+        },
+        {
+          value: indexed,
+          label: "Indexed",
+          approximate:
+            lifecycleContract
+              ?.indexed
+              ?.approximate === true
+        },
+        {
+          value: searchVisible,
+          label: "Search-visible",
+          approximate: false
+        }
       ];
 
       values.forEach(
-        (value, index) => {
+        (
+          item,
+          index
+        ) => {
           const row =
             rows[index];
 
@@ -613,6 +827,9 @@
           const b =
             row.querySelector("b");
 
+          const span =
+            row.querySelector("span");
+
           const bar =
             row.querySelector(
               ".mini-progress i"
@@ -620,7 +837,18 @@
 
           if (b) {
             b.textContent =
-              num(value);
+              item.approximate
+                ? `≈${num(
+                    item.value
+                  )}`
+                : num(
+                    item.value
+                  );
+          }
+
+          if (span) {
+            span.textContent =
+              item.label;
           }
 
           if (bar) {
@@ -631,7 +859,7 @@
                     Math.min(
                       100,
                       (
-                        value /
+                        item.value /
                         registered
                       ) * 100
                     )
@@ -645,7 +873,6 @@
       );
     }
   }
-
 
   // ==========================================================
   // TOP SOURCES
@@ -1333,14 +1560,20 @@
 
     let edgeText;
 
-    if (edge.available) {
+    if (
+      Number.isFinite(
+        Number(
+          k.edge_unique_visitors
+        )
+      )
+    ) {
       edgeText =
         `Cloudflare recorded <b>${num(
-          edge.requests
-        )}</b> edge requests in the selected period.`;
+          k.edge_unique_visitors
+        )}</b> edge unique visitors in the selected period.`;
     } else {
       edgeText =
-        "Cloudflare full-edge totals are syncing; crawler intelligence remains live.";
+        "Cloudflare edge unique visitors are syncing; crawler intelligence remains live.";
     }
 
     list.innerHTML = `
@@ -1671,9 +1904,9 @@
       svg.innerHTML = "";
       dates.innerHTML =
         "<span>No data</span>";
-
       return;
     }
+
 
     const visitors =
       rows.map(row =>
@@ -1696,185 +1929,329 @@
         )
       );
 
-    const pageviews =
-      rows.map(row =>
-        Number(
-          row.pageviews || 0
-        )
-      );
 
-
-    /*
-     * Daily LLM-referral series is not yet
-     * part of overview_v1_fast.
-     */
-    const hasLlmDaily =
-      rows.some(row =>
-        Object.prototype.hasOwnProperty.call(
-          row,
-          "llm_referrals"
-        )
-      );
-
-    const llm =
-      rows.map(row =>
-        Number(
-          row.llm_referrals || 0
-        )
-      );
-
-
-    const maxLeft =
+    const maxVisitors =
       Math.max(
         1,
         ...visitors,
-        ...ai,
-        ...(hasLlmDaily
-          ? llm
-          : [])
-      );
-
-    const maxLeads =
-      Math.max(
-        1,
         ...leads
       );
 
-    const maxBars =
+    const maxAi =
       Math.max(
         1,
-        ...pageviews
+        ...ai
       );
 
 
-    const left = 38;
-    const right = 958;
-    const chartBottom = 272;
-    const chartTop = 30;
+    const left =
+      55;
 
-    const usable =
+    const right =
+      945;
+
+    const top =
+      25;
+
+    const bottom =
+      265;
+
+    const width =
       right - left;
+
+    const height =
+      bottom - top;
+
+
+    function niceMax(value) {
+      const n =
+        Math.max(
+          1,
+          Number(value || 0)
+        );
+
+      const magnitude =
+        Math.pow(
+          10,
+          Math.floor(
+            Math.log10(n)
+          )
+        );
+
+      return (
+        Math.ceil(
+          n /
+          magnitude
+        ) *
+        magnitude
+      );
+    }
+
+
+    function axisNumber(value) {
+      const n =
+        Number(value || 0);
+
+      if (
+        Math.abs(n) >= 1000000
+      ) {
+        return (
+          n / 1000000
+        ).toFixed(
+          n % 1000000 === 0
+            ? 0
+            : 1
+        ) + "M";
+      }
+
+      if (
+        Math.abs(n) >= 1000
+      ) {
+        return (
+          n / 1000
+        ).toFixed(
+          n % 1000 === 0
+            ? 0
+            : 1
+        ) + "K";
+      }
+
+      return Math.round(
+        n
+      ).toString();
+    }
+
+
+    const leftMax =
+      niceMax(
+        maxVisitors
+      );
+
+    const rightMax =
+      niceMax(
+        maxAi
+      );
+
 
     const count =
       rows.length;
 
-    const step =
-      count > 1
-        ? usable / count
-        : 50;
+    const slot =
+      count > 0
+        ? width /
+          count
+        : width;
 
     const barWidth =
       Math.max(
-        5,
+        7,
         Math.min(
-          22,
-          step * 0.55
+          34,
+          slot * 0.55
         )
       );
 
+
     const bars =
-      pageviews
-        .map(
-          (value, index) => {
+      ai.map(
+        (
+          value,
+          index
+        ) => {
+
+          const x =
+            left +
+            index *
+              slot +
+            (
+              slot -
+              barWidth
+            ) / 2;
+
+          const barHeight =
+            (
+              value /
+              rightMax
+            ) *
+            height;
+
+          const y =
+            bottom -
+            barHeight;
+
+          return `
+            <rect
+              x="${x.toFixed(1)}"
+              y="${y.toFixed(1)}"
+              width="${barWidth.toFixed(1)}"
+              height="${Math.max(
+                0,
+                barHeight
+              ).toFixed(1)}"
+              rx="2"
+              fill="#d59631"
+              opacity=".18"
+            />
+          `;
+        }
+      )
+      .join("");
+
+
+    function linePath(
+      values
+    ) {
+      if (!values.length) {
+        return "";
+      }
+
+      const points =
+        values.map(
+          (
+            value,
+            index
+          ) => {
 
             const x =
               count === 1
-                ? 500 -
-                  barWidth / 2
+                ? (
+                    left +
+                    right
+                  ) / 2
                 : left +
-                  index *
                   (
-                    usable /
-                    count
-                  ) +
-                  (
-                    usable /
-                    count -
-                    barWidth
-                  ) / 2;
-
-            const height =
-              (
-                value /
-                maxBars
-              ) *
-              205;
+                    index /
+                    (
+                      count -
+                      1
+                    )
+                  ) *
+                  width;
 
             const y =
-              chartBottom -
+              bottom -
+              (
+                Number(
+                  value || 0
+                ) /
+                leftMax
+              ) *
               height;
 
-            return `
-              <rect
-                x="${x.toFixed(1)}"
-                y="${y.toFixed(1)}"
-                width="${barWidth.toFixed(1)}"
-                height="${height.toFixed(1)}"
-              />
-            `;
+            return [
+              x.toFixed(1),
+              y.toFixed(1)
+            ];
           }
+        );
+
+      if (
+        points.length === 1
+      ) {
+        return (
+          `M${points[0][0]} ${points[0][1]} ` +
+          `L${(
+            Number(
+              points[0][0]
+            ) + 1
+          ).toFixed(1)} ${points[0][1]}`
+        );
+      }
+
+      return points
+        .map(
+          (
+            point,
+            index
+          ) =>
+            `${
+              index === 0
+                ? "M"
+                : "L"
+            }${point[0]} ${point[1]}`
         )
-        .join("");
+        .join(" ");
+    }
 
 
     const humanPath =
-      chartPath(
-        visitors,
-        maxLeft,
-        chartTop,
-        chartBottom
-      );
-
-    const aiPath =
-      chartPath(
-        ai,
-        maxLeft,
-        chartTop,
-        chartBottom
+      linePath(
+        visitors
       );
 
     const leadPath =
-      chartPath(
-        leads,
-        maxLeads,
-        chartTop,
-        chartBottom
+      linePath(
+        leads
       );
 
-    const llmPath =
-      hasLlmDaily
-        ? chartPath(
-            llm,
-            maxLeft,
-            chartTop,
-            chartBottom
-          )
-        : "";
+
+    const ticks =
+      4;
+
+    let grid = "";
+
+    for (
+      let i = 0;
+      i <= ticks;
+      i++
+    ) {
+      const ratio =
+        i / ticks;
+
+      const y =
+        bottom -
+        ratio *
+        height;
+
+      const leftValue =
+        leftMax *
+        ratio;
+
+      const rightValue =
+        rightMax *
+        ratio;
+
+      grid += `
+        <line
+          x1="${left}"
+          y1="${y.toFixed(1)}"
+          x2="${right}"
+          y2="${y.toFixed(1)}"
+          stroke="#edf1f5"
+          stroke-width="1"
+        />
+
+        <text
+          x="${left - 9}"
+          y="${(
+            y + 3
+          ).toFixed(1)}"
+          text-anchor="end"
+          font-size="9"
+          fill="#7a8698"
+        >${axisNumber(
+          leftValue
+        )}</text>
+
+        <text
+          x="${right + 9}"
+          y="${(
+            y + 3
+          ).toFixed(1)}"
+          text-anchor="start"
+          font-size="9"
+          fill="#7a8698"
+        >${axisNumber(
+          rightValue
+        )}</text>
+      `;
+    }
 
 
     svg.innerHTML = `
-      <defs>
-        <linearGradient
-          id="bargrad"
-          x1="0"
-          y1="0"
-          x2="0"
-          y2="1"
-        >
-          <stop
-            offset="0"
-            stop-color="#c0dbff"
-            stop-opacity=".92"
-          />
-          <stop
-            offset="1"
-            stop-color="#edf5ff"
-            stop-opacity=".36"
-          />
-        </linearGradient>
-      </defs>
+      ${grid}
 
-      <g fill="url(#bargrad)">
+      <g>
         ${bars}
       </g>
 
@@ -1882,30 +2259,6 @@
         d="${humanPath}"
         fill="none"
         stroke="#2d6cdf"
-        stroke-width="3.3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-
-      ${
-        hasLlmDaily
-          ? `
-            <path
-              d="${llmPath}"
-              fill="none"
-              stroke="#7b5be7"
-              stroke-width="3.3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          `
-          : ""
-      }
-
-      <path
-        d="${aiPath}"
-        fill="none"
-        stroke="#d59631"
         stroke-width="3.3"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -1926,56 +2279,51 @@
       [
         0,
         Math.floor(
-          (rows.length - 1) * 0.25
+          (
+            rows.length -
+            1
+          ) * 0.25
         ),
         Math.floor(
-          (rows.length - 1) * 0.5
+          (
+            rows.length -
+            1
+          ) * 0.5
         ),
         Math.floor(
-          (rows.length - 1) * 0.75
+          (
+            rows.length -
+            1
+          ) * 0.75
         ),
-        rows.length - 1
+        rows.length -
+          1
       ]
       .filter(
-        (value, index, array) =>
-          array.indexOf(value) ===
-          index
+        (
+          value,
+          index,
+          array
+        ) =>
+          array.indexOf(
+            value
+          ) === index
       );
+
 
     dates.innerHTML =
       labelIndexes
-        .map(index =>
-          `<span>${escapeHtml(
-            dateLabel(
-              rows[index]
-                ?.data_date
-            )
-          )}</span>`
+        .map(
+          index =>
+            `<span>${escapeHtml(
+              dateLabel(
+                rows[index]
+                  ?.data_date
+              )
+            )}</span>`
         )
         .join("");
-
-
-    const legendItems =
-      panel.querySelectorAll(
-        ".legend span"
-      );
-
-    if (legendItems[1]) {
-      legendItems[1].innerHTML =
-        '<i class="dot" style="background:#7b5be7"></i>' +
-        (
-          hasLlmDaily
-            ? "LLM Referrals"
-            : "LLM Referrals · summary"
-        );
-
-      legendItems[1].style.opacity =
-        hasLlmDaily
-          ? ""
-          : ".55";
-    }
   }
-
 
   // ==========================================================
   // INITIAL / ERROR STATES
@@ -2001,7 +2349,7 @@
     );
 
     setKpi(
-      "Total Edge Requests",
+      "Edge Unique Visitors",
       "—",
       "Loading Cloudflare…"
     );
@@ -2042,7 +2390,7 @@
       );
 
       setKpi(
-        "Total Edge Requests",
+        "Edge Unique Visitors",
         "—",
         "Cloudflare data unavailable"
       );
