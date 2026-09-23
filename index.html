@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Primadom Intelligence — Interactive Preview</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
+:root{
+  --navy:#12213b; --navy2:#1e2f4d; --muted:#718096; --line:#e8edf4;
+  --bg:#f6f8fb; --panel:#fff; --gold:#c5a15b; --goldSoft:#f5efe2;
+  --blue:#2d6cdf; --blueSoft:#eaf2ff; --green:#14a36a; --greenSoft:#e9f8f1;
+  --violet:#7b5be7; --violetSoft:#f0ebff; --orange:#d59631; --orangeSoft:#fff3df;
+  --red:#e25858; --redSoft:#fdecec; --cyan:#3ab7c5;
+  --radius:18px; --shadow:0 10px 30px rgba(17,33,59,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Montserrat",ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--navy)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:20px 14px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:16px;z-index:5}
+.brand{padding:3px 14px 10px;text-align:center}
+.brand svg{width:54px;height:46px}
+.brand-name{font-family:Georgia,serif;font-size:20px;letter-spacing:.13em;margin-top:4px}
+.brand-sub{font-size:9px;letter-spacing:.26em;color:var(--muted);margin-top:3px}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav-btn{border:0;background:transparent;color:var(--navy2);padding:11px 12px;border-radius:11px;text-align:left;display:flex;align-items:center;gap:11px;font-size:13px}
+.nav-btn:hover{background:#f7f9fc}
+.nav-btn.active{background:var(--goldSoft);box-shadow:inset 3px 0 0 var(--gold)}
+.nav-icon{width:20px;height:20px;display:grid;place-items:center;font-size:14px;color:#56647a}
+.promo{margin-top:auto;background:linear-gradient(180deg,#eef4fa,#fbfcfe);border:1px solid #e5ebf2;border-radius:16px;overflow:hidden}
+.villa{height:155px;position:relative;background:linear-gradient(180deg,#dce7ef 0 45%,#f5efe7 45% 100%)}
+.villa:before{content:"";position:absolute;left:18px;right:18px;bottom:28px;height:72px;background:linear-gradient(90deg,#3a4d62 0 8%,#f7f3ed 8% 44%,#1d3044 44% 50%,#f7f3ed 50% 88%,#3a4d62 88%);clip-path:polygon(0 18%,48% 0,100% 16%,100% 100%,0 100%)}
+.villa:after{content:"";position:absolute;left:0;right:0;bottom:0;height:30px;background:linear-gradient(180deg,#b8d9e4,#86b9c9)}
+.promo-copy{padding:15px 14px 16px}
+.promo-copy h4{font:500 19px/1.2 "Montserrat",sans-serif;margin:0 0 10px}
+.promo-copy small{display:block;color:#8a94a3;letter-spacing:.16em;line-height:1.55;font-size:8px;text-transform:uppercase}
+
+.main{padding:20px 24px 34px;overflow:hidden}
+.topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px}
+.title h1{font:600 36px/1.05 "Montserrat",sans-serif;margin:0;color:#13203a}
+.title p{margin:4px 0 0;color:#53627a;font-size:14px}
+.top-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.period{display:flex;background:#fff;border:1px solid var(--line);padding:4px;border-radius:11px;box-shadow:var(--shadow)}
+.period button{border:0;background:transparent;color:#526078;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700}
+.period button.active{background:#0f1f38;color:#fff}
+.search-wrap{position:relative}
+.search-wrap input{width:285px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 36px 10px 34px;outline:none;color:var(--navy)}
+.search-wrap .glass{position:absolute;left:11px;top:9px;color:#8290a3}
+.search-wrap .key{position:absolute;right:9px;top:8px;border:1px solid #dce2eb;border-radius:6px;padding:2px 5px;color:#8b96a7;font-size:10px}
+.icon-btn{width:38px;height:38px;border:1px solid var(--line);background:#fff;border-radius:11px;display:grid;place-items:center;position:relative}
+.icon-btn .ping{width:7px;height:7px;border-radius:50%;background:#e74444;position:absolute;right:6px;top:6px}
+.user-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:5px 9px 5px 6px}
+.avatar{width:29px;height:29px;border-radius:50%;background:#151515;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800}
+.user-meta b{font-size:11px;display:block}.user-meta span{font-size:9px;color:var(--muted)}
+
+.screen{display:none}.screen.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(7,minmax(142px,1fr));gap:11px;margin-bottom:13px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:13px 13px 10px;min-height:122px}
+.kpi-head{display:flex;align-items:center;gap:8px;color:#52627b;font-size:11px;font-weight:650}
+.kpi-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:15px}
+.kpi-icon.blue{background:var(--blueSoft);color:var(--blue)} .kpi-icon.green{background:var(--greenSoft);color:var(--green)}
+.kpi-icon.violet{background:var(--violetSoft);color:var(--violet)} .kpi-icon.orange{background:var(--orangeSoft);color:var(--orange)}
+.kpi-value{font-size:26px;font-weight:800;margin:8px 0 2px}.kpi-sub{font-size:10px;color:#778398}
+.up{color:var(--green);font-weight:800}.down{color:var(--red);font-weight:800}
+.spark{display:block;width:100%;height:26px;margin-top:5px}
+.lifecycle-values{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+.lifecycle-values b{font-size:11px;display:block}.lifecycle-values span{font-size:8px;color:var(--muted)}
+.mini-progress{height:5px;background:#edf0f5;border-radius:99px;margin-top:3px;overflow:hidden}.mini-progress i{display:block;height:100%;background:var(--green)}
+
+.grid-main{display:grid;grid-template-columns:2.1fr 1fr;gap:12px;margin-bottom:12px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.panel-head h2,.panel-head h3{margin:0;font-size:17px}
+.head-left{display:flex;align-items:center;gap:9px}
+.panel-icon{font-size:18px;color:var(--blue)}
+.view-link{border:0;background:transparent;color:var(--blue);font-size:11px;font-weight:700}
+.legend{display:flex;justify-content:center;gap:18px;font-size:10px;color:#617087;margin:2px 0 7px;flex-wrap:wrap}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px}
+.chart-wrap{height:292px;border:1px solid #edf1f5;border-radius:11px;overflow:hidden;position:relative;background:
+linear-gradient(#edf1f6 1px,transparent 1px),
+linear-gradient(90deg,#edf1f6 1px,transparent 1px);
+background-size:100% 48px, 78px 100%}
+.chart-wrap svg{position:absolute;inset:0;width:100%;height:100%}
+.axis-label{position:absolute;font-size:9px;color:#778398;z-index:2}.axis-label.left{left:5px;top:5px}.axis-label.right{right:5px;top:5px}
+.chart-dates{position:absolute;left:50px;right:26px;bottom:5px;display:flex;justify-content:space-between;font-size:9px;color:#7a8698}
+
+.source-table{display:flex;flex-direction:column}
+.source-row{display:grid;grid-template-columns:20px 24px 1.25fr .8fr .55fr .55fr;gap:6px;align-items:center;padding:6px 1px;border-bottom:1px solid #f0f2f5;font-size:11px;cursor:pointer}
+.source-row:hover{background:#fbfcff}
+.source-row:last-child{border-bottom:0}
+.rank{text-align:center;color:#8894a5}
+.brand-logo{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:900;letter-spacing:-.03em;flex:none}
+.logo-chatgpt{background:#0d2038;color:white}.logo-google{background:#fff;border:1px solid #dfe4ea;color:#4285f4}
+.logo-perplexity{background:#123b47;color:#fff}.logo-bing{background:#0a73e8;color:#fff}.logo-claude{background:#ef7d41;color:#fff}
+.logo-openai{background:#111f38;color:#fff}.logo-bot{background:#7657da;color:#fff}.logo-direct{background:#eaf8f1;color:#198c60}
+.logo-meta{background:#1b75eb;color:white}.logo-amazon{background:#232f3e;color:#ffb000}.logo-baidu{background:#3189ff;color:white}
+.pill{padding:3px 6px;border-radius:999px;font-size:9px;font-weight:750;text-align:center}
+.pill.llm{background:var(--violetSoft);color:#6c4ed2}.pill.search{background:var(--blueSoft);color:#2a65c5}.pill.human{background:var(--greenSoft);color:#168557}.pill.bot{background:var(--orangeSoft);color:#a86a15}
+.mini-trend{height:18px;width:40px}
+
+.grid-bottom{display:grid;grid-template-columns:1.25fr .85fr .85fr .92fr;gap:12px;margin-bottom:12px}
+.table{width:100%;border-collapse:collapse;font-size:10px}.table th{text-align:left;color:#7a8798;font-weight:700;background:#f8fafc;padding:7px 6px}.table td{padding:7px 6px;border-bottom:1px solid #f0f2f5;vertical-align:middle}.table tr:last-child td{border-bottom:0}.table tbody tr{cursor:pointer}.table tbody tr:hover td{background:#fbfcff}
+.type{padding:3px 6px;border-radius:7px;font-size:8px;white-space:nowrap}.type.blue{background:var(--blueSoft);color:#2464c7}.type.gold{background:var(--orangeSoft);color:#98620e}.type.green{background:var(--greenSoft);color:#168557}.type.violet{background:var(--violetSoft);color:#684ccf}
+.issue{display:grid;grid-template-columns:22px 1fr 44px;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f2f5;font-size:10px;cursor:pointer}.issue:last-child{border-bottom:0}.issue:hover{background:#fbfcff}
+.issue-icon{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:9px;font-weight:800}.issue-icon.red{background:var(--red)}.issue-icon.orange{background:var(--orange)}.issue-icon.blue{background:var(--blue)}.issue-icon.green{background:var(--green)}
+.issue small{color:var(--muted);display:block;margin-top:2px}.issue .count{text-align:right;font-weight:800}
+
+.grid-last{display:grid;grid-template-columns:1.25fr 1.75fr;gap:12px}
+.country-wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:10px;align-items:center}
+.country-list{font-size:10px}.country-line{display:grid;grid-template-columns:1fr 42px 30px;gap:5px;padding:4px 0}.flag{margin-right:5px}
+.map{width:100%;height:95px}.map path{fill:#d8e4f4}.map .hot{fill:#4a83d8}.map .mid{fill:#8db1e5}
+.insight-list{display:grid;grid-template-columns:1fr;gap:5px}
+.insight{display:flex;gap:8px;align-items:flex-start;font-size:10px;line-height:1.35}.insight-icon{width:17px;height:17px;border-radius:5px;display:grid;place-items:center;flex:none;font-size:9px}.insight-icon.g{background:var(--greenSoft);color:var(--green)}.insight-icon.b{background:var(--blueSoft);color:var(--blue)}.insight-icon.r{background:var(--redSoft);color:var(--red)}.insight-icon.o{background:var(--orangeSoft);color:var(--orange)}
+.ai-tag{display:flex;align-items:center;gap:5px;font-size:9px;color:#617087}
+
+.detail-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.detail-header h2{margin:0;font:500 28px Georgia,serif}.detail-header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.detail-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}.detail-card b{font-size:22px;display:block;margin:8px 0 3px}.detail-card small{color:var(--muted)}
+.detail-2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}.big-table{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.big-table table{width:100%;border-collapse:collapse;font-size:11px}.big-table th{text-align:left;color:#768297;padding:8px;border-bottom:1px solid var(--line)}.big-table td{padding:9px 8px;border-bottom:1px solid #f0f2f5}
+.bar-row{display:grid;grid-template-columns:110px 1fr 48px;gap:8px;align-items:center;font-size:11px;margin:9px 0}.bar{height:8px;background:#eef1f5;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);border-radius:99px}
+
+.modal{position:fixed;inset:0;background:rgba(8,18,33,.32);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.modal.open{display:flex}.modal-card{width:min(720px,94vw);background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.25);padding:20px}.modal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.modal-top h3{margin:0;font-size:20px}.close{border:0;background:#f3f5f8;border-radius:8px;width:30px;height:30px}
+.drawer-info{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.info-box{background:#f7f9fc;border-radius:12px;padding:12px}.info-box span{font-size:9px;color:var(--muted);display:block}.info-box b{font-size:16px;margin-top:3px;display:block}
+
+.status-toast{position:fixed;right:22px;bottom:22px;background:#0f2038;color:#fff;border-radius:12px;padding:10px 13px;font-size:11px;box-shadow:0 15px 40px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:.2s;z-index:60}.status-toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1450px){.kpis{grid-template-columns:repeat(4,1fr)}.grid-bottom{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1050px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.promo{display:none}.nav{display:grid;grid-template-columns:repeat(3,1fr)}.main{padding:16px}.grid-main,.grid-last,.detail-2{grid-template-columns:1fr}.kpis,.detail-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.topbar{flex-direction:column}.top-actions{justify-content:flex-start}.search-wrap input{width:100%}.grid-bottom{grid-template-columns:1fr}.kpis,.detail-grid{grid-template-columns:1fr}.nav{grid-template-columns:1fr}.country-wrap{grid-template-columns:1fr}.source-row{grid-template-columns:18px 22px 1fr 55px}.source-row .pill,.source-row .mini-trend{display:none}}
+</style>
+
+<style id="primadom-ui-fine-tune">
+.title h1 {
+  font-size: 34px !important;
+}
+.search-wrap input {
+  font-size: 14px !important;
+}
+</style>
+
+
+<style id="primadom-ui-polish-v2">
+
+/* Softer large KPI numbers */
+.kpi-value,
+.detail-card b {
+  color: #263956 !important;
+}
+
+/* Internal page titles use the same UI typography */
+.detail-header h2 {
+  font-family: "Montserrat", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 28px !important;
+  line-height: 1.08 !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: #182a46 !important;
+}
+
+</style>
+
+
+<style id="primadom-ui-polish-v3">
+
+/* Softer large numbers */
+.kpi-value,
+.detail-card b {
+  color: #4A607D !important;
+}
+
+/* Lifecycle numbers slightly softer too */
+.lifecycle-values b {
+  color: #4A607D !important;
+}
+
+/* Google Search card */
+.google-metrics {
+  display: flex;
+  align-items: flex-start;
+  gap: 38px;
+  margin-top: 12px;
+}
+
+.google-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.google-clicks {
+  margin-left: 8px;
+}
+
+.google-number {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+  color: #4A607D;
+}
+
+.google-clicks .google-number {
+  color: #6B7E98;
+}
+
+.google-label {
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 500;
+  color: #8792A2;
+}
+
+.google-trend {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--green);
+  white-space: nowrap;
+}
+
+</style>
+
+
+<style id="primadom-ui-polish-v4">
+
+/* Strong but softer-than-black KPI colour */
+.kpi-value,
+.detail-card b,
+.lifecycle-values b {
+  color: #334E6F !important;
+}
+
+/* Google Search uses real semantic/brand colours */
+.google-metric:first-child .google-number {
+  color: #4285F4 !important;
+}
+
+.google-clicks .google-number {
+  color: #34A853 !important;
+}
+
+/* Keep labels neutral and clean */
+.google-label {
+  color: #7A889C !important;
+}
+
+/* Positive trends remain clear */
+.google-trend {
+  color: #18A66A !important;
+}
+
+</style>
+
+
+<style id="primadom-ui-polish-v5">
+
+/* Google Impressions = same main KPI colour */
+.google-metric:first-child .google-number {
+  color: #334E6F !important;
+}
+
+/* Google Clicks remains green */
+.google-clicks .google-number {
+  color: #34A853 !important;
+}
+
+/* Leads main number = blue */
+.kpi[data-title="Leads"] .kpi-value {
+  color: #4285F4 !important;
+}
+
+</style>
+
+
+<style id="primadom-intelligence-extra-v1">
+
+.intelligence-extra-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+
+.language-head,
+.language-row {
+  display:grid;
+  grid-template-columns:1.5fr .65fr .5fr .55fr;
+  gap:10px;
+  align-items:center;
+}
+
+.language-head {
+  padding:4px 6px 7px;
+  color:#8792a2;
+  font-size:9px;
+  font-weight:700;
+  border-bottom:1px solid #eef1f5;
+}
+
+.language-row {
+  padding:8px 6px;
+  border-bottom:1px solid #f0f2f5;
+  font-size:10px;
+}
+
+.language-row:last-child {
+  border-bottom:0;
+}
+
+.language-row > div {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.lang-code {
+  width:29px;
+  height:23px;
+  border-radius:7px;
+  background:#eaf2ff;
+  color:#2d6cdf;
+  display:grid;
+  place-items:center;
+  font-size:9px;
+  font-weight:800;
+}
+
+.assistant-mini-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.assistant-mini {
+  background:#f8fafc;
+  border:1px solid #eef1f5;
+  border-radius:11px;
+  padding:10px;
+}
+
+.assistant-mini span {
+  display:block;
+  font-size:9px;
+  color:#7b8798;
+  margin-bottom:4px;
+}
+
+.assistant-mini b {
+  font-size:18px;
+  color:#334E6F;
+}
+
+.assistant-topic-title {
+  color:#8792a2;
+  font-size:9px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.assistant-topic {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 0;
+  font-size:10px;
+  border-bottom:1px solid #f0f2f5;
+}
+
+.assistant-topic:last-child {
+  border-bottom:0;
+}
+
+.language-full-table {
+  margin-top:12px;
+}
+
+.assistant-detail-grid {
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.assistant-pages-table {
+  margin-top:12px;
+}
+
+.page-live-link {
+  color:inherit;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.page-live-link:hover {
+  color:#2d6cdf;
+}
+
+@media(max-width:1050px) {
+  .intelligence-extra-grid,
+  .assistant-detail-grid {
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:650px) {
+  .assistant-mini-grid {
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+</style>
+
+
+<style id="primadom-assistant-kpi-v1">
+
+.assistant-kpi-main {
+  margin-top: 10px;
+}
+
+.assistant-kpi-main b {
+  display: inline-block;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+  color: #7B5BE7;
+}
+
+.assistant-kpi-main span {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+  color: #7A889C;
+}
+
+.assistant-kpi-stats {
+  display: flex;
+  gap: 22px;
+  margin-top: 10px;
+}
+
+.assistant-kpi-stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.assistant-kpi-stats b {
+  font-size: 12px;
+  line-height: 1;
+  color: #334E6F;
+}
+
+.assistant-kpi-stats span {
+  margin-top: 3px;
+  font-size: 8px;
+  color: #8792A2;
+}
+
+</style>
+
+
+<style id="primadom-layout-spacing-v2">
+
+/* Same vertical rhythm as the rest of Dashboard */
+.intelligence-extra-grid {
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.grid-last {
+  margin-top: 0 !important;
+}
+
+</style>
+
+
+<style id="primadom-main-grid-width-v1">
+
+/* Slightly more width for Top Traffic Sources */
+.grid-main {
+  grid-template-columns: 1.9fr 1.1fr !important;
+}
+
+</style>
+
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">
+    <svg viewBox="0 0 80 65" aria-hidden="true">
+      <path d="M15 53 L40 8 L65 53 L15 53 Z M24 53 L40 25 L56 53 M27 29 L53 29 M20 45 L60 45" fill="none" stroke="#c5a15b" stroke-width="2"/>
+      <path d="M17 52 L63 20" stroke="#c5a15b" stroke-width="1.6"/>
+    </svg>
+    <div class="brand-name">PRIMADOM</div>
+    <div class="brand-sub">INTELLIGENCE</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" data-screen="dashboard"><span class="nav-icon">⌂</span>Dashboard</button>
+    <button class="nav-btn" data-screen="traffic"><span class="nav-icon">▥</span>Traffic & Analytics</button>
+    <button class="nav-btn" data-screen="bots"><span class="nav-icon">◉</span>AI & Bot Intelligence</button>
+    <button class="nav-btn" data-screen="search"><span class="nav-icon">⌕</span>Search Performance</button>
+    <button class="nav-btn" data-screen="pages"><span class="nav-icon">▤</span>Pages & Content</button>
+    <button class="nav-btn" data-screen="assistant"><span class="nav-icon">✦</span>AI Assistant</button>
+    <button class="nav-btn" data-screen="leads"><span class="nav-icon">▽</span>Leads & Conversions</button>
+    <button class="nav-btn" data-screen="reports"><span class="nav-icon">◫</span>Reports</button>
+    <button class="nav-btn" data-screen="alerts"><span class="nav-icon">♢</span>Alerts</button>
+    <button class="nav-btn" data-screen="settings"><span class="nav-icon">⚙</span>Settings</button>
+  </nav>
+  <div class="promo">
+    <div class="villa"></div>
+    <div class="promo-copy">
+      <h4>AI Intelligence<br/>for a more valuable<br/>real estate world.</h4>
+      <small>Primadom Intelligence<br/>Unlocking opportunity<br/>through intelligence.</small>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+<section class="screen active" id="dashboard">
+  <div class="topbar">
+    <div class="title"><h1>Primadom Intelligence</h1><p>Unified Analytics Command Center</p></div>
+    <div class="top-actions">
+      <div class="period">
+        <button data-period="Today">Today</button><button class="active" data-period="7D">7D</button><button data-period="30D">30D</button><button data-period="90D">90D</button><button data-period="Custom">Custom ◫</button>
+      </div>
+      <div class="search-wrap"><span class="glass">⌕</span><input id="globalSearch" placeholder="Search pages, sources, or insights…"/><span class="key">⌘K</span></div>
+      <button class="icon-btn" id="notifyBtn">♢<span class="ping"></span></button>
+      <div class="user-chip"><div class="avatar">ZS</div><div class="user-meta"><b>Zack</b><span>Admin</span></div><span>⌄</span></div>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi clickable" data-title="Page Network" data-detail="Registered Primadom pages across all languages and page types.">
+      <div class="kpi-head"><span class="kpi-icon blue">▤</span>Total Pages</div><div class="kpi-value">180,063</div><div class="kpi-sub"><span class="up">↑ +2.4%</span></div>
+      <svg class="spark" viewBox="0 0 120 26"><path d="M1 23 C20 22 28 18 38 19 S60 24 73 17 S99 20 119 5" fill="none" stroke="#80b1ff" stroke-width="2"/></svg>
+    </div>
+    <div class="kpi clickable" data-title="Human Visitors" data-detail="Canonical first-party human visitors. Bot traffic is excluded.">
+      <div class="kpi-head"><span class="kpi-icon green">●</span>Human Visitors</div><div class="kpi-value">1,284</div><div class="kpi-sub"><span class="up">↑ +18.7%</span></div>
+      <svg class="spark" viewBox="0 0 120 26"><path d="M1 22 C18 15 25 20 39 17 S63 22 76 15 S98 22 119 6" fill="none" stroke="#75d6aa" stroke-width="2"/></svg>
+    </div>
+    <div class="kpi clickable" data-title="Leads" data-detail="Server-confirmed lead_created conversions. CRM statuses will extend this card later.">
+      <div class="kpi-head"><span class="kpi-icon violet">▽</span>Leads</div><div class="kpi-value">17</div><div class="kpi-sub">2.1% conversion · <span class="up">↑ +41.7%</span></div>
+    </div>
+    <div class="kpi clickable" data-title="Total Edge Requests" data-detail="All Cloudflare edge requests for Primadom.">
+      <div class="kpi-head"><span class="kpi-icon orange">▧</span>Total Requests</div><div class="kpi-value">24,891</div><div class="kpi-sub"><span class="up">↑ +12.8%</span></div>
+    </div>
+    <div class="kpi clickable" data-title="AI & Bot Requests" data-detail="AI search, assistant fetchers, training bots, search crawlers and SEO bots.">
+      <div class="kpi-head"><span class="kpi-icon blue">◉</span>AI & Bot Requests</div><div class="kpi-value">8,441</div><div class="kpi-sub"><span class="up">↑ +25.6%</span></div>
+    </div>
+    
+<div class="kpi clickable google-search-kpi"
+     data-title="Google Search"
+     data-detail="Google Search Console impressions, clicks, CTR and average position.">
+
+  <div class="kpi-head">
+    <span class="brand-logo logo-google">G</span>
+    Google Search
+  </div>
+
+  <div class="google-metrics">
+    <div class="google-metric">
+      <div class="google-number">320K</div>
+      <div class="google-label">Impressions</div>
+      <div class="google-trend">↑ +12.1%</div>
+    </div>
+
+    <div class="google-metric google-clicks">
+      <div class="google-number">4,980</div>
+      <div class="google-label">Clicks</div>
+      <div class="google-trend">↑ +18.4%</div>
+    </div>
+  </div>
+
+</div>
+
+    <div class="kpi clickable assistant-kpi"
+         data-title="AI Assistant"
+         data-detail="Primadom AI Assistant usage across all pages, languages and topics.">
+
+      <div class="kpi-head">
+        <span class="kpi-icon violet">✦</span>
+        AI Assistant
+      </div>
+
+      <div class="assistant-kpi-main">
+        <b>146</b>
+        <span>Conversations</span>
+      </div>
+
+      <div class="assistant-kpi-stats">
+        <div>
+          <b>612</b>
+          <span>Messages</span>
+        </div>
+        <div>
+          <b>38</b>
+          <span>Voice</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="kpi clickable" data-title="Index / Lifecycle Coverage" data-detail="Registered → sitemap → crawled → search-visible page lifecycle.">
+      <div class="kpi-head"><span class="kpi-icon blue">▦</span>Index / Lifecycle Coverage</div>
+      <div class="lifecycle-values">
+        <div><b>172,842</b><span>Registered</span><div class="mini-progress"><i style="width:96%"></i></div></div>
+        <div><b>168,215</b><span>Sitemap</span><div class="mini-progress"><i style="width:93%"></i></div></div>
+        <div><b>156,701</b><span>Crawled</span><div class="mini-progress"><i style="width:87%"></i></div></div>
+        <div><b>131,420</b><span>Search-visible</span><div class="mini-progress"><i style="width:73%;background:#7b5be7"></i></div></div>
+      </div>
+    </div>
+
+    
+
+  </div>
+
+  <div class="grid-main">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="head-left"><span class="panel-icon">▥</span><h2>Traffic & Visibility Overview</h2></div>
+        <select id="granularity" style="border:1px solid var(--line);border-radius:9px;padding:6px 24px 6px 8px;background:#fff;color:#526078;font-size:10px"><option>Daily</option><option>Weekly</option><option>Monthly</option></select>
+      </div>
+      <div class="legend"><span><i class="dot" style="background:#2d6cdf"></i>Human Visitors</span><span><i class="dot" style="background:#7b5be7"></i>LLM Referrals</span><span><i class="dot" style="background:#d59631"></i>AI Crawlers</span><span><i class="dot" style="background:#14a36a"></i>Leads</span></div>
+      <div class="chart-wrap">
+        <span class="axis-label left">Visitors / Requests</span><span class="axis-label right">Leads</span>
+        <svg viewBox="0 0 1000 292" preserveAspectRatio="none">
+          <defs><linearGradient id="bargrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c0dbff" stop-opacity=".92"/><stop offset="1" stop-color="#edf5ff" stop-opacity=".36"/></linearGradient></defs>
+          <g fill="url(#bargrad)">
+            <rect x="38" y="210" width="21" height="62"/><rect x="77" y="203" width="21" height="69"/><rect x="116" y="215" width="21" height="57"/><rect x="155" y="196" width="21" height="76"/>
+            <rect x="194" y="185" width="21" height="87"/><rect x="233" y="191" width="21" height="81"/><rect x="272" y="171" width="21" height="101"/><rect x="311" y="178" width="21" height="94"/>
+            <rect x="350" y="162" width="21" height="110"/><rect x="389" y="151" width="21" height="121"/><rect x="428" y="146" width="21" height="126"/><rect x="467" y="130" width="21" height="142"/>
+            <rect x="506" y="140" width="21" height="132"/><rect x="545" y="112" width="21" height="160"/><rect x="584" y="96" width="21" height="176"/><rect x="623" y="83" width="21" height="189"/>
+            <rect x="662" y="104" width="21" height="168"/><rect x="701" y="66" width="21" height="206"/><rect x="740" y="85" width="21" height="187"/><rect x="779" y="75" width="21" height="197"/>
+            <rect x="818" y="55" width="21" height="217"/><rect x="857" y="64" width="21" height="208"/><rect x="896" y="49" width="21" height="223"/><rect x="935" y="34" width="21" height="238"/>
+          </g>
+          <path d="M38 221 C120 210 150 224 205 193 S305 210 385 181 S475 198 545 151 S625 172 705 126 S795 140 865 101 S930 93 958 82" fill="none" stroke="#2d6cdf" stroke-width="3.3"/>
+          <path d="M38 243 C120 237 150 247 218 221 S318 230 388 207 S498 222 558 181 S648 202 728 161 S818 168 898 132 S943 124 958 127" fill="none" stroke="#7b5be7" stroke-width="3.3"/>
+          <path d="M38 147 C98 165 128 122 177 136 S237 156 307 122 S397 146 467 112 S547 142 617 84 S707 109 777 79 S867 96 937 65 S950 74 958 50" fill="none" stroke="#d59631" stroke-width="3.3"/>
+          <path d="M38 259 C128 249 168 265 228 242 S318 255 398 235 S488 245 568 216 S658 226 738 197 S828 206 908 176 S948 169 958 162" fill="none" stroke="#14a36a" stroke-width="3.3"/>
+        </svg>
+        <div class="chart-dates"><span>Mar 1</span><span>Mar 7</span><span>Mar 14</span><span>Mar 21</span><span>Mar 30</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon" style="color:var(--gold)">♧</span><h3>Top Traffic Sources</h3></div><button class="view-link open-modal" data-title="All Traffic Sources">View all →</button></div>
+      <div class="source-table" id="sourceRows">
+        <div class="source-row detail-row" data-name="ChatGPT"><span class="rank">1.</span><span class="brand-logo logo-chatgpt">◎</span><b>ChatGPT</b><span class="pill llm">LLM Referral</span><b>2,847</b><span class="up">↑52%</span></div>
+        <div class="source-row detail-row" data-name="Google Organic"><span class="rank">2.</span><span class="brand-logo logo-google">G</span><b>Google Organic</b><span class="pill search">Search</span><b>2,341</b><span class="up">↑18%</span></div>
+        <div class="source-row detail-row" data-name="Direct"><span class="rank">3.</span><span class="brand-logo logo-direct">↗</span><b>Direct</b><span class="pill human">Human</span><b>1,903</b><span class="up">↑12%</span></div>
+        <div class="source-row detail-row" data-name="Perplexity"><span class="rank">4.</span><span class="brand-logo logo-perplexity">P</span><b>Perplexity</b><span class="pill llm">LLM Referral</span><b>876</b><span class="up">↑43%</span></div>
+        <div class="source-row detail-row" data-name="Bing"><span class="rank">5.</span><span class="brand-logo logo-bing">b</span><b>Bing</b><span class="pill search">Search</span><b>691</b><span class="up">↑28%</span></div>
+        <div class="source-row detail-row" data-name="Claude"><span class="rank">6.</span><span class="brand-logo logo-claude">✳</span><b>Claude</b><span class="pill llm">LLM Referral</span><b>502</b><span class="up">↑61%</span></div>
+        <div class="source-row detail-row" data-name="Googlebot"><span class="rank">7.</span><span class="brand-logo logo-google">G</span><b>Googlebot</b><span class="pill bot">AI Crawler</span><b>4,892</b><span class="up">↑37%</span></div>
+        <div class="source-row detail-row" data-name="OAI-SearchBot"><span class="rank">8.</span><span class="brand-logo logo-openai">◎</span><b>OAI-SearchBot</b><span class="pill bot">AI Crawler</span><b>2,941</b><span class="up">↑48%</span></div>
+        <div class="source-row detail-row" data-name="Bingbot"><span class="rank">9.</span><span class="brand-logo logo-bing">b</span><b>Bingbot</b><span class="pill bot">AI Crawler</span><b>1,621</b><span class="up">↑33%</span></div>
+        <div class="source-row detail-row" data-name="Other LLM"><span class="rank">10.</span><span class="brand-logo logo-bot">AI</span><b>Other LLM</b><span class="pill llm">LLM Referral</span><b>412</b><span class="up">↑27%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-bottom">
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon">▥</span><h3>Top Pages</h3></div><button class="view-link" data-jump="pages">View all →</button></div>
+      <table class="table searchable">
+        <thead><tr><th>#</th><th>Page</th><th>Type</th><th>Users</th><th>Leads</th><th>Trend</th></tr></thead>
+        <tbody>
+          <tr class="detail-row" data-name="/en/projects/passo/"><td>1</td><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td><span class="type blue">Project</span></td><td>482</td><td>6</td><td class="up">↗</td></tr>
+          <tr class="detail-row" data-name="/en/areas/dubai-islands/"><td>2</td><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td><span class="type green">District</span></td><td>317</td><td>4</td><td class="up">↗</td></tr>
+          <tr class="detail-row" data-name="/en/developers/meydan-group/"><td>3</td><td><a class="page-live-link" href="https://primadom.ai/en/developers/meydan-group/" target="_blank" rel="noopener">/en/developers/meydan-group/</a></td><td><span class="type gold">Developer</span></td><td>192</td><td>2</td><td class="up">↗</td></tr>
+          <tr class="detail-row" data-name="/en/compare-projects/..."><td>4</td><td>/en/compare-projects/…</td><td><span class="type violet">Comparison</span></td><td>176</td><td>1</td><td class="up">↗</td></tr>
+          <tr><td>5</td><td><a class="page-live-link" href="https://primadom.ai/en/budgets/aed-10m-25m/" target="_blank" rel="noopener">/en/budgets/aed-10m-25m/</a></td><td><span class="type green">Budget</span></td><td>121</td><td>1</td><td class="up">↗</td></tr>
+          <tr><td>6</td><td><a class="page-live-link" href="https://primadom.ai/es/projects/zyra-vista-residence/" target="_blank" rel="noopener">/es/projects/zyra-vista-residence/</a></td><td><span class="type blue">Project</span></td><td>98</td><td>0</td><td class="down">↘</td></tr>
+          <tr><td>7</td><td><a class="page-live-link" href="https://primadom.ai/en/ai-answers/service-charges/" target="_blank" rel="noopener">/en/ai-answers/service-charges/</a></td><td><span class="type gold">AI Answer</span></td><td>86</td><td>1</td><td class="up">↗</td></tr>
+          <tr><td>8</td><td><a class="page-live-link" href="https://primadom.ai/ru/projects/passo/" target="_blank" rel="noopener">/ru/projects/passo/</a></td><td><span class="type blue">Project</span></td><td>71</td><td>0</td><td class="down">↘</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon" style="color:#7b5be7">◫</span><h3>LLM Referrals</h3></div><button class="view-link open-modal" data-title="LLM Referrals">View all →</button></div>
+      <table class="table">
+        <thead><tr><th>Source</th><th>Users</th><th>Leads</th><th>Trend</th></tr></thead>
+        <tbody>
+          <tr class="detail-row" data-name="ChatGPT"><td><span class="brand-logo logo-chatgpt" style="display:inline-grid;vertical-align:middle;margin-right:6px">◎</span>ChatGPT</td><td>2,847</td><td>6</td><td class="up">↑52%</td></tr>
+          <tr class="detail-row" data-name="Perplexity"><td><span class="brand-logo logo-perplexity" style="display:inline-grid;vertical-align:middle;margin-right:6px">P</span>Perplexity</td><td>876</td><td>4</td><td class="up">↑43%</td></tr>
+          <tr class="detail-row" data-name="Claude"><td><span class="brand-logo logo-claude" style="display:inline-grid;vertical-align:middle;margin-right:6px">✳</span>Claude</td><td>502</td><td>3</td><td class="up">↑61%</td></tr>
+          <tr class="detail-row" data-name="Gemini"><td><span class="brand-logo logo-google" style="display:inline-grid;vertical-align:middle;margin-right:6px">✦</span>Gemini</td><td>284</td><td>2</td><td class="up">↑38%</td></tr>
+          <tr><td><span class="brand-logo logo-bot" style="display:inline-grid;vertical-align:middle;margin-right:6px">AI</span>Other LLM</td><td>412</td><td>2</td><td class="up">↑27%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon">◉</span><h3>Crawler Intelligence</h3></div><button class="view-link" data-jump="bots">View all →</button></div>
+      <table class="table">
+        <thead><tr><th>Crawler</th><th>Requests</th><th>Pages</th><th>Trend</th></tr></thead>
+        <tbody>
+          <tr class="detail-row" data-name="Googlebot"><td><span class="brand-logo logo-google" style="display:inline-grid;vertical-align:middle;margin-right:6px">G</span>Googlebot</td><td>4,892</td><td>42,716</td><td class="up">↑37%</td></tr>
+          <tr class="detail-row" data-name="Bingbot"><td><span class="brand-logo logo-bing" style="display:inline-grid;vertical-align:middle;margin-right:6px">b</span>Bingbot</td><td>1,621</td><td>18,442</td><td class="up">↑33%</td></tr>
+          <tr class="detail-row" data-name="OAI-SearchBot"><td><span class="brand-logo logo-openai" style="display:inline-grid;vertical-align:middle;margin-right:6px">◎</span>OAI-SearchBot</td><td>2,941</td><td>31,205</td><td class="up">↑48%</td></tr>
+          <tr class="detail-row" data-name="ClaudeBot"><td><span class="brand-logo logo-claude" style="display:inline-grid;vertical-align:middle;margin-right:6px">✳</span>ClaudeBot</td><td>842</td><td>9,671</td><td class="up">↑41%</td></tr>
+          <tr class="detail-row" data-name="GPTBot"><td><span class="brand-logo logo-openai" style="display:inline-grid;vertical-align:middle;margin-right:6px">◎</span>GPTBot</td><td>618</td><td>7,328</td><td class="up">↑29%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon" style="color:#b9852c">♧</span><h3>Pages Needing Attention</h3></div><button class="view-link open-modal" data-title="Pages Needing Attention">View all →</button></div>
+      <div class="issue detail-row" data-name="High impressions, low CTR"><span class="issue-icon red">!</span><div><b>High impressions, low CTR</b><small>Optimize titles & snippets</small></div><span class="count">342</span></div>
+      <div class="issue detail-row" data-name="AI crawled, no human traffic"><span class="issue-icon orange">AI</span><div><b>AI crawled, no human traffic</b><small>Content / internal linking opportunity</small></div><span class="count">528</span></div>
+      <div class="issue detail-row" data-name="Traffic dropping"><span class="issue-icon red">↓</span><div><b>Traffic dropping</b><small>30-day decline detected</small></div><span class="count">176</span></div>
+      <div class="issue detail-row" data-name="Good engagement, no leads"><span class="issue-icon blue">i</span><div><b>Good engagement, no leads</b><small>Review CTA / offer</small></div><span class="count">421</span></div>
+    </div>
+  </div>
+
+  <div class="intelligence-extra-grid">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="head-left">
+          <span class="panel-icon" style="color:#2d6cdf">◎</span>
+          <h3>Language Performance</h3>
+        </div>
+        <button class="view-link" data-jump="traffic">View all →</button>
+      </div>
+
+      <div class="language-head">
+        <span>Language</span>
+        <span>Visitors</span>
+        <span>Leads</span>
+        <span>Trend</span>
+      </div>
+
+      <div class="language-row">
+        <div><span class="lang-code">EN</span><b>English</b></div>
+        <span>744</span><span>11</span><span class="up">↑18%</span>
+      </div>
+
+      <div class="language-row">
+        <div><span class="lang-code">RU</span><b>Russian</b></div>
+        <span>180</span><span>2</span><span class="up">↑11%</span>
+      </div>
+
+      <div class="language-row">
+        <div><span class="lang-code">AR</span><b>Arabic</b></div>
+        <span>103</span><span>1</span><span class="up">↑24%</span>
+      </div>
+
+      <div class="language-row">
+        <div><span class="lang-code">ES</span><b>Spanish</b></div>
+        <span>77</span><span>1</span><span class="up">↑9%</span>
+      </div>
+
+      <div class="language-row">
+        <div><span class="lang-code">DE</span><b>German</b></div>
+        <span>64</span><span>1</span><span class="up">↑7%</span>
+      </div>
+    </div>
+
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="head-left">
+          <span class="panel-icon" style="color:#7b5be7">✦</span>
+          <h3>AI Assistant Intelligence</h3>
+        </div>
+        <button class="view-link" data-jump="assistant">View all →</button>
+      </div>
+
+      <div class="assistant-mini-grid">
+        <div class="assistant-mini">
+          <span>Conversations</span>
+          <b>146</b>
+        </div>
+        <div class="assistant-mini">
+          <span>Messages</span>
+          <b>612</b>
+        </div>
+        <div class="assistant-mini">
+          <span>Voice</span>
+          <b>38</b>
+        </div>
+        <div class="assistant-mini">
+          <span>Leads</span>
+          <b style="color:#4285F4">7</b>
+        </div>
+      </div>
+
+      <div class="assistant-topic-title">Top user interests</div>
+
+      <div class="assistant-topic">
+        <span>Project details & availability</span><b>31%</b>
+      </div>
+      <div class="assistant-topic">
+        <span>Prices & payment plans</span><b>24%</b>
+      </div>
+      <div class="assistant-topic">
+        <span>Area & location questions</span><b>18%</b>
+      </div>
+      <div class="assistant-topic">
+        <span>Market guidance</span><b>15%</b>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="grid-last">
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon">◎</span><h3>Top Countries</h3></div><button class="view-link open-modal" data-title="Country Intelligence">View all →</button></div>
+      <div class="country-wrap">
+        <div class="country-list">
+          <div class="country-line"><span><span class="flag">🇺🇸</span>United States</span><b>42.1%</b><span>540</span></div>
+          <div class="country-line"><span><span class="flag">🇬🇧</span>United Kingdom</span><b>11.8%</b><span>151</span></div>
+          <div class="country-line"><span><span class="flag">🇨🇦</span>Canada</span><b>7.4%</b><span>95</span></div>
+          <div class="country-line"><span><span class="flag">🇦🇺</span>Australia</span><b>5.6%</b><span>72</span></div>
+          <div class="country-line"><span><span class="flag">🇦🇪</span>UAE</span><b>4.9%</b><span>63</span></div>
+        </div>
+        <svg class="map" viewBox="0 0 300 130">
+          <path d="M15 40 L38 25 L63 30 L72 48 L57 61 L32 58 L18 50 Z"/>
+          <path class="hot" d="M36 35 L61 33 L67 48 L53 56 L34 51 Z"/>
+          <path d="M78 63 L92 68 L98 88 L88 106 L81 97 L84 80 Z"/>
+          <path d="M126 34 L145 25 L165 28 L174 39 L165 50 L148 48 L138 58 L125 52 Z"/>
+          <path class="mid" d="M140 29 L152 27 L158 37 L150 43 L141 39 Z"/>
+          <path d="M153 51 L176 54 L183 75 L173 101 L157 94 L151 73 Z"/>
+          <path d="M177 35 L210 27 L236 35 L246 48 L231 58 L215 54 L204 66 L183 59 Z"/>
+          <path class="mid" d="M216 41 L228 39 L232 47 L224 52 L217 49 Z"/>
+          <path d="M245 82 L263 78 L275 90 L267 102 L249 99 Z"/>
+          <path class="hot" d="M250 84 L263 82 L270 90 L264 97 L253 95 Z"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="head-left"><span class="panel-icon" style="color:#b9852c">✦</span><h3>Quick Insights</h3></div><span class="ai-tag">✦ AI Summary</span></div>
+      <div class="insight-list">
+        <div class="insight"><span class="insight-icon g">↗</span><span>Human visitors increased by <b>18.7%</b> this week, driven by Google Organic and ChatGPT.</span></div>
+        <div class="insight"><span class="insight-icon b">☆</span><span>Leads are up <b>41.7%</b> with a 2.1% conversion rate.</span></div>
+        <div class="insight"><span class="insight-icon b">AI</span><span>AI crawler activity increased by <b>25.6%</b>, led by Googlebot and OAI-SearchBot.</span></div>
+        <div class="insight"><span class="insight-icon r">!</span><span><b>342 pages</b> have high impressions but low CTR — prioritize metadata optimization.</span></div>
+        <div class="insight"><span class="insight-icon o">💡</span><span>Opportunity: <b>528 pages</b> are crawled by AI but have no human traffic. Consider internal linking and content updates.</span></div>
+      </div>
+    </div>
+  </div>
+
+  
+</section>
+
+<section class="screen" id="traffic">
+  <div class="detail-header"><div><h2>Traffic & Analytics</h2><p>Canonical human traffic and acquisition intelligence.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid">
+    <div class="detail-card">Human Visitors<b>1,284</b><small class="up">↑ 18.7%</small></div>
+    <div class="detail-card">Sessions<b>1,674</b><small>1.30 sessions / visitor</small></div>
+    <div class="detail-card">Pageviews<b>3,941</b><small>2.35 / session</small></div>
+    <div class="detail-card">Engagement Rate<b>63.4%</b><small class="up">↑ 4.2 pp</small></div>
+  </div>
+  <div class="detail-2">
+    <div class="big-table"><h3>Acquisition Sources</h3><table><tr><th>Source</th><th>Channel</th><th>Visitors</th><th>Sessions</th><th>Leads</th></tr><tr><td>ChatGPT</td><td>LLM referral</td><td>2,847</td><td>3,104</td><td>6</td></tr><tr><td>Google Organic</td><td>Search</td><td>2,341</td><td>2,785</td><td>5</td></tr><tr><td>Direct</td><td>Direct</td><td>1,903</td><td>2,188</td><td>2</td></tr><tr><td>Perplexity</td><td>LLM referral</td><td>876</td><td>921</td><td>4</td></tr></table></div>
+    <div class="big-table"><h3>Channel Mix</h3><div class="bar-row"><span>LLM Referral</span><div class="bar"><i style="width:72%"></i></div><b>32%</b></div><div class="bar-row"><span>Organic Search</span><div class="bar"><i style="width:62%;background:#14a36a"></i></div><b>28%</b></div><div class="bar-row"><span>Direct</span><div class="bar"><i style="width:44%;background:#c5a15b"></i></div><b>20%</b></div><div class="bar-row"><span>Referral / Other</span><div class="bar"><i style="width:32%;background:#7b5be7"></i></div><b>20%</b></div></div>
+  </div>
+
+  <div class="big-table language-full-table">
+    <div class="panel-head">
+      <div class="head-left">
+        <span class="panel-icon" style="color:#2d6cdf">◎</span>
+        <h3>Language Performance</h3>
+      </div>
+      <span class="ai-tag">Visitors · Search · AI · Leads</span>
+    </div>
+
+    <table>
+      <tr>
+        <th>Language</th>
+        <th>Visitors</th>
+        <th>Pageviews</th>
+        <th>Leads</th>
+        <th>Conversion</th>
+        <th>Search Clicks</th>
+        <th>AI Requests</th>
+        <th>Trend</th>
+      </tr>
+      <tr><td>EN — English</td><td>744</td><td>2,308</td><td>11</td><td>1.48%</td><td>3,102</td><td>4,286</td><td class="up">↑18%</td></tr>
+      <tr><td>RU — Russian</td><td>180</td><td>493</td><td>2</td><td>1.11%</td><td>684</td><td>1,021</td><td class="up">↑11%</td></tr>
+      <tr><td>AR — Arabic</td><td>103</td><td>302</td><td>1</td><td>0.97%</td><td>391</td><td>844</td><td class="up">↑24%</td></tr>
+      <tr><td>ES — Spanish</td><td>77</td><td>217</td><td>1</td><td>1.30%</td><td>276</td><td>603</td><td class="up">↑9%</td></tr>
+      <tr><td>DE — German</td><td>64</td><td>188</td><td>1</td><td>1.56%</td><td>231</td><td>497</td><td class="up">↑7%</td></tr>
+      <tr><td>FR — French</td><td>51</td><td>156</td><td>1</td><td>1.96%</td><td>174</td><td>416</td><td class="up">↑8%</td></tr>
+      <tr><td>HI — Hindi</td><td>39</td><td>115</td><td>0</td><td>0%</td><td>78</td><td>391</td><td>↑3%</td></tr>
+      <tr><td>ZH — Chinese</td><td>26</td><td>82</td><td>0</td><td>0%</td><td>44</td><td>383</td><td>↑2%</td></tr>
+    </table>
+  </div>
+
+</section>
+
+<section class="screen" id="bots">
+  <div class="detail-header"><div><h2>AI & Bot Intelligence</h2><p>Search crawlers, AI search, assistant fetchers, training and SEO bots.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid">
+    <div class="detail-card">Bot Requests<b>8,441</b><small class="up">↑ 25.6%</small></div><div class="detail-card">Pages Crawled<b>6,658</b><small>Mapped canonical pages</small></div><div class="detail-card">HTTP 2xx<b>99.8%</b><small>Healthy crawler access</small></div><div class="detail-card">AI Operators<b>8</b><small>OpenAI, Google, Anthropic…</small></div>
+  </div>
+  <div class="big-table"><h3>Crawler Registry</h3><table><tr><th>Operator</th><th>Crawler</th><th>Purpose</th><th>Requests</th><th>Pages</th><th>Errors</th></tr><tr><td><span class="brand-logo logo-openai" style="display:inline-grid;vertical-align:middle;margin-right:5px">◎</span>OpenAI</td><td>OAI-SearchBot</td><td>AI Search</td><td>2,941</td><td>31,205</td><td>0</td></tr><tr><td><span class="brand-logo logo-google" style="display:inline-grid;vertical-align:middle;margin-right:5px">G</span>Google</td><td>Googlebot</td><td>Search</td><td>4,892</td><td>42,716</td><td>1</td></tr><tr><td><span class="brand-logo logo-claude" style="display:inline-grid;vertical-align:middle;margin-right:5px">✳</span>Anthropic</td><td>ClaudeBot</td><td>Training</td><td>842</td><td>9,671</td><td>0</td></tr><tr><td><span class="brand-logo logo-perplexity" style="display:inline-grid;vertical-align:middle;margin-right:5px">P</span>Perplexity</td><td>PerplexityBot</td><td>AI Search</td><td>876</td><td>7,944</td><td>0</td></tr></table></div>
+</section>
+
+<section class="screen" id="search">
+  <div class="detail-header"><div><h2>Search Performance</h2><p>Google Search Console visibility and lifecycle performance.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid"><div class="detail-card">Impressions<b>320K</b><small class="up">↑ 12.1%</small></div><div class="detail-card">Clicks<b>4,980</b><small class="up">↑ 18.4%</small></div><div class="detail-card">CTR<b>1.56%</b><small class="up">↑ 0.08 pp</small></div><div class="detail-card">Average Position<b>18.4</b><small class="up">Improved 1.7</small></div></div>
+  <div class="detail-2"><div class="big-table"><h3>Top Search Pages</h3><table><tr><th>Page</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Position</th></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td>28,405</td><td>684</td><td>2.41%</td><td>8.7</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td>22,100</td><td>517</td><td>2.34%</td><td>9.2</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/developers/meydan-group/" target="_blank" rel="noopener">/en/developers/meydan-group/</a></td><td>15,991</td><td>268</td><td>1.68%</td><td>13.1</td></tr></table></div><div class="big-table"><h3>Lifecycle</h3><div class="bar-row"><span>Registered</span><div class="bar"><i style="width:96%;background:#14a36a"></i></div><b>96%</b></div><div class="bar-row"><span>Sitemap</span><div class="bar"><i style="width:93%;background:#14a36a"></i></div><b>93%</b></div><div class="bar-row"><span>Crawled</span><div class="bar"><i style="width:87%;background:#14a36a"></i></div><b>87%</b></div><div class="bar-row"><span>Search-visible</span><div class="bar"><i style="width:73%;background:#7b5be7"></i></div><b>73%</b></div></div></div>
+</section>
+
+<section class="screen" id="pages">
+  <div class="detail-header"><div><h2>Pages & Content</h2><p>Full Primadom page network with performance and agent-priority signals.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid"><div class="detail-card">Registered Pages<b>180,063</b><small>8 languages</small></div><div class="detail-card">Active Production<b>179,992</b><small>Canonical routes</small></div><div class="detail-card">Need Attention<b>1,467</b><small>Across active rules</small></div><div class="detail-card">Fastest Growing<b>286</b><small>Positive momentum</small></div></div>
+  <div class="big-table"><h3>Page Network</h3><table><tr><th>Page</th><th>Language</th><th>Type</th><th>Visitors</th><th>Search</th><th>AI Crawl</th><th>Leads</th><th>Priority</th></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td>EN</td><td>Project</td><td>482</td><td>Strong</td><td>Yes</td><td>6</td><td>Growth</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td>EN</td><td>District</td><td>317</td><td>Strong</td><td>Yes</td><td>4</td><td>Growth</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/ru/projects/passo/" target="_blank" rel="noopener">/ru/projects/passo/</a></td><td>RU</td><td>Project</td><td>71</td><td>Medium</td><td>Yes</td><td>0</td><td>Improve CTA</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/ai-answers/service-charges/" target="_blank" rel="noopener">/en/ai-answers/service-charges/</a></td><td>EN</td><td>AI Answer</td><td>86</td><td>High impressions</td><td>Yes</td><td>1</td><td>CTR</td></tr></table></div>
+</section>
+
+
+<section class="screen" id="assistant">
+
+  <div class="detail-header">
+    <div>
+      <h2>AI Assistant Intelligence</h2>
+      <p>How visitors use Primadom AI across projects, districts and the wider Dubai property market.</p>
+    </div>
+    <button class="view-link" data-jump="dashboard">← Dashboard</button>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-card">
+      Assistant Opens
+      <b>412</b>
+      <small>Visitors opening Primadom AI</small>
+    </div>
+
+    <div class="detail-card">
+      Conversations
+      <b>146</b>
+      <small>35.4% open → conversation</small>
+    </div>
+
+    <div class="detail-card">
+      Messages
+      <b>612</b>
+      <small>4.2 messages / conversation</small>
+    </div>
+
+    <div class="detail-card">
+      Assistant Leads
+      <b style="color:#4285F4!important">7</b>
+      <small>Conversation → lead</small>
+    </div>
+  </div>
+
+  <div class="assistant-detail-grid">
+
+    <div class="big-table">
+      <h3>Top Questions & Topics</h3>
+      <table>
+        <tr>
+          <th>Topic</th>
+          <th>Conversations</th>
+          <th>Share</th>
+          <th>Leads</th>
+        </tr>
+        <tr><td>Project details & availability</td><td>45</td><td>31%</td><td>3</td></tr>
+        <tr><td>Prices & payment plans</td><td>35</td><td>24%</td><td>2</td></tr>
+        <tr><td>Area & location guidance</td><td>26</td><td>18%</td><td>1</td></tr>
+        <tr><td>Dubai market guidance</td><td>22</td><td>15%</td><td>1</td></tr>
+        <tr><td>Developer questions</td><td>18</td><td>12%</td><td>0</td></tr>
+      </table>
+    </div>
+
+    <div class="big-table">
+      <h3>Assistant Usage</h3>
+
+      <div class="bar-row">
+        <span>Text</span>
+        <div class="bar"><i style="width:74%"></i></div>
+        <b>74%</b>
+      </div>
+
+      <div class="bar-row">
+        <span>Voice</span>
+        <div class="bar"><i style="width:26%;background:#7b5be7"></i></div>
+        <b>26%</b>
+      </div>
+
+      <div class="bar-row">
+        <span>Project Qs</span>
+        <div class="bar"><i style="width:61%;background:#14a36a"></i></div>
+        <b>61%</b>
+      </div>
+
+      <div class="bar-row">
+        <span>Market Qs</span>
+        <div class="bar"><i style="width:39%;background:#c5a15b"></i></div>
+        <b>39%</b>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="big-table assistant-pages-table">
+    <h3>Top Pages Using AI Assistant</h3>
+    <table>
+      <tr>
+        <th>Page</th>
+        <th>Language</th>
+        <th>Conversations</th>
+        <th>Voice</th>
+        <th>Contact Sends</th>
+        <th>Leads</th>
+      </tr>
+
+      <tr>
+        <td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td>
+        <td>EN</td>
+        <td>28</td>
+        <td>9</td>
+        <td>6</td>
+        <td>3</td>
+      </tr>
+
+      <tr>
+        <td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td>
+        <td>EN</td>
+        <td>19</td>
+        <td>4</td>
+        <td>3</td>
+        <td>1</td>
+      </tr>
+
+      <tr>
+        <td><a class="page-live-link" href="https://primadom.ai/ru/projects/passo/" target="_blank" rel="noopener">/ru/projects/passo/</a></td>
+        <td>RU</td>
+        <td>11</td>
+        <td>5</td>
+        <td>2</td>
+        <td>1</td>
+      </tr>
+    </table>
+  </div>
+
+</section>
+
+<section class="screen" id="leads">
+  <div class="detail-header"><div><h2>Leads & Conversions</h2><p>Lead source, page, language and conversion intelligence. CRM stages can plug in later.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid"><div class="detail-card">Leads<b>17</b><small class="up">↑ 41.7%</small></div><div class="detail-card">Conversion Rate<b>2.1%</b><small>Visitor → lead</small></div><div class="detail-card">LLM Leads<b>9</b><small>ChatGPT / Perplexity / Claude</small></div><div class="detail-card">CRM Sync<b>Pending</b><small>LeadSquared extension</small></div></div>
+  <div class="big-table"><h3>Recent Leads</h3><table><tr><th>Created</th><th>Source</th><th>Page</th><th>Language</th><th>Country</th><th>Status</th></tr><tr><td>09:42</td><td>ChatGPT</td><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td>EN</td><td>AE</td><td>New</td></tr><tr><td>08:18</td><td>Google Organic</td><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td>EN</td><td>GB</td><td>New</td></tr><tr><td>Yesterday</td><td>Perplexity</td><td><a class="page-live-link" href="https://primadom.ai/en/projects/armani-beach-residences/" target="_blank" rel="noopener">/en/projects/armani-beach-residences/</a></td><td>EN</td><td>US</td><td>New</td></tr></table></div>
+</section>
+
+<section class="screen" id="reports">
+  <div class="detail-header"><div><h2>Reports</h2><p>Executive reporting and period snapshots.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid"><div class="detail-card">Daily Brief<b>Ready</b><small>Auto-generated</small></div><div class="detail-card">Weekly Review<b>Monday</b><small>Growth & anomalies</small></div><div class="detail-card">Monthly Report<b>1st</b><small>Executive summary</small></div><div class="detail-card">Exports<b>CSV / PDF</b><small>Planned V1+</small></div></div>
+</section>
+
+<section class="screen" id="alerts">
+  <div class="detail-header"><div><h2>Alerts</h2><p>Operational anomalies and action queue for future AI agents.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="big-table"><h3>Active Alerts</h3><table><tr><th>Severity</th><th>Rule</th><th>Pages</th><th>Suggested action</th></tr><tr><td style="color:#e25858">High</td><td>Traffic falling >30%</td><td>176</td><td>Content refresh / technical QA</td></tr><tr><td style="color:#d59631">Medium</td><td>AI crawled, no humans</td><td>528</td><td>Internal linking / improve content</td></tr><tr><td style="color:#2d6cdf">Info</td><td>High engagement, no leads</td><td>421</td><td>CTA optimization</td></tr></table></div>
+</section>
+
+<section class="screen" id="settings">
+  <div class="detail-header"><div><h2>Settings</h2><p>Data sources, refresh cycles and dashboard governance.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
+  <div class="detail-grid"><div class="detail-card">Supabase<b>Connected</b><small>Source of truth</small></div><div class="detail-card">Cloudflare<b>Connected</b><small>Edge & crawler data</small></div><div class="detail-card">Google Search Console<b>Connected</b><small>Search visibility</small></div><div class="detail-card">LeadSquared<b>Pending</b><small>CRM stages later</small></div></div>
+</section>
+</main>
+</div>
+
+<div class="modal" id="modal"><div class="modal-card"><div class="modal-top"><h3 id="modalTitle">Details</h3><button class="close" id="closeModal">×</button></div><p id="modalText" style="color:#68768a;font-size:12px;line-height:1.6"></p><div class="drawer-info"><div class="info-box"><span>Current period</span><b id="modalPeriod">7D</b></div><div class="info-box"><span>Trend</span><b class="up">Positive</b></div><div class="info-box"><span>Status</span><b>Live</b></div></div></div></div>
+<div class="status-toast" id="toast">Updated</div>
+
+<script>
+const screens=[...document.querySelectorAll('.screen')];
+const navBtns=[...document.querySelectorAll('.nav-btn')];
+let currentPeriod='7D';
+
+function showScreen(id){
+  screens.forEach(s=>s.classList.toggle('active',s.id===id));
+  navBtns.forEach(b=>b.classList.toggle('active',b.dataset.screen===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+navBtns.forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
+document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.jump)));
+
+document.querySelectorAll('.period button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.period button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); currentPeriod=btn.dataset.period;
+    showToast('Period changed to '+currentPeriod);
+  });
+});
+
+const modal=document.getElementById('modal'), modalTitle=document.getElementById('modalTitle'), modalText=document.getElementById('modalText');
+function openModal(title,text){
+  modalTitle.textContent=title; modalText.textContent=text || 'Interactive preview. In production this drill-down will load the selected source, page, crawler or KPI from Primadom aggregates.';
+  document.getElementById('modalPeriod').textContent=currentPeriod; modal.classList.add('open');
+}
+document.getElementById('closeModal').onclick=()=>modal.classList.remove('open');
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+document.querySelectorAll('.clickable').forEach(x=>x.addEventListener('click',()=>openModal(x.dataset.title,x.dataset.detail)));
+document.querySelectorAll('.detail-row').forEach(x=>x.addEventListener('click',()=>openModal(x.dataset.name,'Drill-down preview for '+x.dataset.name+'. Production view will show traffic, source, search, AI crawl, engagement, CTA, leads and trend history where applicable.')));
+document.querySelectorAll('.open-modal').forEach(x=>x.addEventListener('click',()=>openModal(x.dataset.title)));
+document.getElementById('notifyBtn').onclick=()=>openModal('Notifications','No critical production alerts in this visual preview.');
+
+const search=document.getElementById('globalSearch');
+search.addEventListener('input',()=>{
+  const q=search.value.toLowerCase().trim();
+  document.querySelectorAll('.searchable tbody tr, #sourceRows .source-row').forEach(r=>{
+    r.style.display=(!q || r.textContent.toLowerCase().includes(q))?'':'none';
+  });
+});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();search.focus()}
+  if(e.key==='Escape')modal.classList.remove('open');
+});
+document.getElementById('granularity').addEventListener('change',e=>showToast('Chart: '+e.target.value));
+
+function showToast(text){
+  const t=document.getElementById('toast');t.textContent=text;t.classList.add('show');
+  clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),1600);
+}
+</script>
+
+<script id="primadom-live-links-v1">
+document.querySelectorAll('.page-live-link').forEach(link => {
+  link.addEventListener('click', e => {
+    e.stopPropagation();
+  });
+});
+</script>
+
+</body>
+</html>
