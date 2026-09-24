@@ -108,9 +108,12 @@ background-size:100% 48px, 78px 100%}
 .issue small{color:var(--muted);display:block;margin-top:2px}.issue .count{text-align:right;font-weight:800}
 
 .grid-last{display:grid;grid-template-columns:1.25fr 1.75fr;gap:12px}
-.country-wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:10px;align-items:center}
-.country-list{font-size:10px}.country-line{display:grid;grid-template-columns:1fr 42px 30px;gap:5px;padding:4px 0}.flag{margin-right:5px}
-.map{width:100%;height:95px}.map path{fill:#d8e4f4}.map .hot{fill:#4a83d8}.map .mid{fill:#8db1e5}
+.country-wrap{display:block}
+.country-list{width:100%;font-size:10px}
+.country-line{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px;gap:16px;align-items:center;padding:6px 0}
+.country-line>span:last-child{text-align:right}
+.country-line>b{text-align:right}
+.flag{margin-right:7px}
 .insight-list{display:grid;grid-template-columns:1fr;gap:5px}
 .insight{display:flex;gap:8px;align-items:flex-start;font-size:10px;line-height:1.35}.insight-icon{width:17px;height:17px;border-radius:5px;display:grid;place-items:center;flex:none;font-size:9px}.insight-icon.g{background:var(--greenSoft);color:var(--green)}.insight-icon.b{background:var(--blueSoft);color:var(--blue)}.insight-icon.r{background:var(--redSoft);color:var(--red)}.insight-icon.o{background:var(--orangeSoft);color:var(--orange)}
 .ai-tag{display:flex;align-items:center;gap:5px;font-size:9px;color:#617087}
@@ -817,18 +820,7 @@ background-size:100% 48px, 78px 100%}
           <div class="country-line"><span><span class="flag">🇦🇺</span>Australia</span><b>5.6%</b><span>72</span></div>
           <div class="country-line"><span><span class="flag">🇦🇪</span>UAE</span><b>4.9%</b><span>63</span></div>
         </div>
-        <svg class="map" viewBox="0 0 300 130">
-          <path d="M15 40 L38 25 L63 30 L72 48 L57 61 L32 58 L18 50 Z"/>
-          <path class="hot" d="M36 35 L61 33 L67 48 L53 56 L34 51 Z"/>
-          <path d="M78 63 L92 68 L98 88 L88 106 L81 97 L84 80 Z"/>
-          <path d="M126 34 L145 25 L165 28 L174 39 L165 50 L148 48 L138 58 L125 52 Z"/>
-          <path class="mid" d="M140 29 L152 27 L158 37 L150 43 L141 39 Z"/>
-          <path d="M153 51 L176 54 L183 75 L173 101 L157 94 L151 73 Z"/>
-          <path d="M177 35 L210 27 L236 35 L246 48 L231 58 L215 54 L204 66 L183 59 Z"/>
-          <path class="mid" d="M216 41 L228 39 L232 47 L224 52 L217 49 Z"/>
-          <path d="M245 82 L263 78 L275 90 L267 102 L249 99 Z"/>
-          <path class="hot" d="M250 84 L263 82 L270 90 L264 97 L253 95 Z"/>
-        </svg>
+        
       </div>
     </div>
 
@@ -1128,7 +1120,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 });
 </script>
 
-<script src="/assets/js/intelligence-dashboard.js?v=20260924-countries2"></script>
+<script src="/assets/js/intelligence-dashboard.js?v=20260924-countries3"></script>
 
 </body>
 </html>
