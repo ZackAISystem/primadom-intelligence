@@ -257,122 +257,240 @@
       return;
     }
 
-    const values =
-      rows.map(row =>
-        Number(
-          row.visitors ??
-          row.human_visitors ??
-          0
-        )
+    const series = [
+      {
+        key: "visitors",
+        label: "Visitors",
+        color: "#2d75f0",
+        get: row => Number(row.visitors ?? row.human_visitors ?? 0)
+      },
+      {
+        key: "sessions",
+        label: "Sessions",
+        color: "#7b5be7",
+        get: row => Number(row.sessions ?? 0)
+      },
+      {
+        key: "pageviews",
+        label: "Pageviews",
+        color: "#20a875",
+        get: row => Number(row.pageviews ?? 0)
+      },
+      {
+        key: "leads",
+        label: "Leads",
+        color: "#c58a28",
+        get: row => Number(row.leads ?? 0)
+      }
+    ];
+
+    const width = 1100;
+    const height = 310;
+    const left = 66;
+    const right = 26;
+    const top = 30;
+    const bottom = 52;
+
+    const usableW = width - left - right;
+    const usableH = height - top - bottom;
+
+    const allValues = [];
+    series.forEach(s => rows.forEach(row => allValues.push(s.get(row))));
+
+    const rawMax = Math.max(...allValues, 1);
+
+    function niceMax(value) {
+      if (value <= 5) return 5;
+      const power = Math.pow(10, Math.floor(Math.log10(value)));
+      const scaled = value / power;
+      let nice;
+      if (scaled <= 1) nice = 1;
+      else if (scaled <= 2) nice = 2;
+      else if (scaled <= 5) nice = 5;
+      else nice = 10;
+      return nice * power;
+    }
+
+    const max = niceMax(rawMax);
+
+    function xFor(index) {
+      return left + (
+        rows.length === 1
+          ? usableW / 2
+          : (index / (rows.length - 1)) * usableW
       );
+    }
 
-    const max =
-      Math.max(...values, 1);
+    function yFor(value) {
+      return top + usableH - (value / max) * usableH;
+    }
 
-    const width = 1000;
-    const height = 260;
-    const left = 48;
-    const right = 22;
-    const top = 24;
-    const bottom = 42;
+    const gridCount = 4;
 
-    const usableW =
-      width - left - right;
+    const grid = Array.from({ length: gridCount + 1 }, (_, i) => {
+      const value = (max / gridCount) * i;
+      const y = yFor(value);
 
-    const usableH =
-      height - top - bottom;
+      return `
+        <line
+          x1="${left}"
+          y1="${y}"
+          x2="${width - right}"
+          y2="${y}"
+          stroke="#e8edf4"
+          stroke-width="1"
+        />
+        <text
+          x="${left - 12}"
+          y="${y + 4}"
+          text-anchor="end"
+          font-size="11"
+          fill="#7a8698"
+        >${num(Math.round(value))}</text>
+      `;
+    }).join("");
 
-    const points =
-      values.map((value, index) => {
-        const x =
-          left +
-          (
-            rows.length === 1
-              ? usableW / 2
-              : (index / (rows.length - 1)) * usableW
-          );
+    const labelEvery =
+      rows.length > 45 ? 7 :
+      rows.length > 20 ? 4 :
+      rows.length > 10 ? 2 : 1;
 
-        const y =
-          top +
-          usableH -
-          (value / max) * usableH;
+    const xLabels = rows.map((row, index) => {
+      if (
+        index % labelEvery !== 0 &&
+        index !== rows.length - 1
+      ) return "";
 
-        return { x, y, value };
+      const raw =
+        row.date ||
+        row.day ||
+        row.metric_date ||
+        "";
+
+      const text = String(raw).slice(5);
+
+      return `
+        <text
+          x="${xFor(index)}"
+          y="${height - 17}"
+          text-anchor="middle"
+          font-size="10"
+          fill="#7a8698"
+        >${safe(text)}</text>
+      `;
+    }).join("");
+
+    const paths = series.map(s => {
+      const points = rows.map((row, index) => {
+        const value = s.get(row);
+        return {
+          x: xFor(index),
+          y: yFor(value),
+          value,
+          row
+        };
       });
 
-    const polyline =
-      points
-        .map(p => `${p.x},${p.y}`)
-        .join(" ");
+      const polyline =
+        points.map(p => `${p.x},${p.y}`).join(" ");
 
-    const labels =
-      rows.map((row, index) => {
-        const x =
-          left +
-          (
-            rows.length === 1
-              ? usableW / 2
-              : (index / (rows.length - 1)) * usableW
-          );
-
-        const raw =
-          row.date ||
-          row.day ||
-          row.metric_date ||
+      const dots = points.map(p => {
+        const date =
+          p.row.date ||
+          p.row.day ||
+          p.row.metric_date ||
           "";
 
-        const label =
-          String(raw).slice(5);
-
         return `
-          <text
-            x="${x}"
-            y="${height - 12}"
-            text-anchor="middle"
-            font-size="10"
-            fill="#7a8698"
-          >${safe(label)}</text>
+          <circle
+            cx="${p.x}"
+            cy="${p.y}"
+            r="${rows.length === 1 ? 5 : 3.2}"
+            fill="${s.color}"
+          >
+            <title>${safe(date)} · ${safe(s.label)}: ${num(p.value)}</title>
+          </circle>
         `;
       }).join("");
 
-    const dots =
-      points.map(p => `
-        <circle
-          cx="${p.x}"
-          cy="${p.y}"
-          r="4"
-          fill="#2d75f0"
-        >
-          <title>${num(p.value)} visitors</title>
-        </circle>
-      `).join("");
-
-    root.innerHTML = `
-      <svg
-        viewBox="0 0 ${width} ${height}"
-        preserveAspectRatio="none"
-        style="width:100%;height:100%;display:block"
-        aria-label="Human visitors over time"
-      >
-        <line
-          x1="${left}"
-          y1="${top + usableH}"
-          x2="${width - right}"
-          y2="${top + usableH}"
-          stroke="#e6ebf2"
-        />
-
+      return `
         <polyline
           points="${polyline}"
           fill="none"
-          stroke="#2d75f0"
-          stroke-width="3"
+          stroke="${s.color}"
+          stroke-width="2.5"
           vector-effect="non-scaling-stroke"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         />
-
         ${dots}
-        ${labels}
-      </svg>
+      `;
+    }).join("");
+
+    const legend = series.map(s => `
+      <span style="
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+        font-size:12px;
+        color:#53627a;
+        white-space:nowrap
+      ">
+        <i style="
+          width:9px;
+          height:9px;
+          border-radius:50%;
+          background:${s.color};
+          display:inline-block
+        "></i>
+        ${safe(s.label)}
+      </span>
+    `).join("");
+
+    const todayNote =
+      rows.length === 1
+        ? '<span style="font-size:11px;color:#7a8698">Today uses the current daily aggregate.</span>'
+        : '';
+
+    root.innerHTML = `
+      <div style="
+        height:100%;
+        min-height:300px;
+        display:flex;
+        flex-direction:column
+      ">
+        <div style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:16px;
+          flex-wrap:wrap;
+          padding:2px 8px 10px 8px
+        ">
+          <div style="
+            display:flex;
+            gap:18px;
+            flex-wrap:wrap;
+            align-items:center
+          ">
+            ${legend}
+          </div>
+          ${todayNote}
+        </div>
+
+        <div style="flex:1;min-height:250px">
+          <svg
+            viewBox="0 0 ${width} ${height}"
+            preserveAspectRatio="none"
+            style="width:100%;height:100%;display:block"
+            aria-label="Visitors, sessions, pageviews and leads over time"
+          >
+            ${grid}
+            ${paths}
+            ${xLabels}
+          </svg>
+        </div>
+      </div>
     `;
   }
 
@@ -581,6 +699,81 @@
       }).join("");
   }
 
+
+  const COUNTRY_NAMES = {
+    AE: "United Arab Emirates",
+    US: "United States",
+    GB: "United Kingdom",
+    IN: "India",
+    DE: "Germany",
+    FR: "France",
+    ES: "Spain",
+    RU: "Russia",
+    CN: "China",
+    HK: "Hong Kong",
+    SG: "Singapore",
+    SA: "Saudi Arabia",
+    QA: "Qatar",
+    KW: "Kuwait",
+    BH: "Bahrain",
+    OM: "Oman",
+    EG: "Egypt",
+    TR: "Türkiye",
+    IT: "Italy",
+    NL: "Netherlands",
+    CH: "Switzerland",
+    AT: "Austria",
+    BE: "Belgium",
+    CA: "Canada",
+    AU: "Australia",
+    NZ: "New Zealand",
+    JP: "Japan",
+    KR: "South Korea",
+    BR: "Brazil",
+    MX: "Mexico",
+    ZA: "South Africa",
+    ID: "Indonesia",
+    MY: "Malaysia",
+    TH: "Thailand",
+    PH: "Philippines",
+    PK: "Pakistan",
+    BD: "Bangladesh",
+    UA: "Ukraine",
+    KZ: "Kazakhstan"
+  };
+
+  function countryName(row) {
+    if (row.country_name) return row.country_name;
+
+    const code = String(
+      row.country_code ||
+      row.country ||
+      ""
+    ).toUpperCase();
+
+    if (COUNTRY_NAMES[code]) {
+      return COUNTRY_NAMES[code];
+    }
+
+    try {
+      if (
+        code &&
+        typeof Intl !== "undefined" &&
+        typeof Intl.DisplayNames === "function"
+      ) {
+        const names = new Intl.DisplayNames(
+          ["en"],
+          { type: "region" }
+        );
+
+        return names.of(code) || code;
+      }
+    } catch (_) {}
+
+    return code || "Unknown";
+  }
+
+
   /* ========================================================
      COUNTRIES
      ======================================================== */
@@ -621,10 +814,7 @@
         return `
           <tr>
             <td><b>${safe(
-              row.country_name ||
-              row.country_code ||
-              row.country ||
-              "Unknown"
+              countryName(row)
             )}</b></td>
             <td>${num(row.visitors)}</td>
             <td>${num(row.sessions)}</td>
@@ -906,6 +1096,16 @@
           "custom"
         );
 
+        localStorage.setItem(
+          "primadom-intelligence-detail-custom-from",
+          from
+        );
+
+        localStorage.setItem(
+          "primadom-intelligence-detail-custom-to",
+          to
+        );
+
         activateButton("custom");
 
         loadTraffic(
@@ -917,6 +1117,22 @@
     );
   }
 
+
+  function syncTrafficPeriodUI() {
+    activateButton(currentPeriod);
+    showCustom(currentPeriod === "custom");
+  }
+
+  window.addEventListener(
+    "primadom:screenchange",
+    event => {
+      if (event.detail?.screen === "traffic") {
+        syncTrafficPeriodUI();
+      }
+    }
+  );
+
+
   /* ========================================================
      INITIAL LOAD
      ======================================================== */
@@ -924,6 +1140,26 @@
   activateButton(currentPeriod);
 
   if (currentPeriod === "custom") {
+    const savedFrom = localStorage.getItem(
+      "primadom-intelligence-detail-custom-from"
+    );
+    const savedTo = localStorage.getItem(
+      "primadom-intelligence-detail-custom-to"
+    );
+
+    if (savedFrom && savedTo) {
+      const fromInput = $("trafficFrom");
+      const toInput = $("trafficTo");
+
+      if (fromInput) fromInput.value = savedFrom;
+      if (toInput) toInput.value = savedTo;
+
+      activateButton("custom");
+      showCustom(true);
+      loadTraffic("custom", savedFrom, savedTo);
+      return;
+    }
+
     currentPeriod = "7d";
 
     localStorage.setItem(

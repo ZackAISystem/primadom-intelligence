@@ -902,7 +902,7 @@ background-size:100% 48px, 78px 100%}
     <div class="detail-card">
       Conversion
       <b id="trafficConversion">—</b>
-      <small>Visitor → lead</small>
+      <small>Confirmed leads ÷ unique visitors</small>
     </div>
   </div>
 
@@ -937,7 +937,7 @@ background-size:100% 48px, 78px 100%}
               <th>Visitors</th>
               <th>Sessions</th>
               <th>Leads</th>
-              <th>Conversion</th>
+              <th>Visitor → Lead Conversion</th>
             </tr>
           </thead>
           <tbody id="trafficSourcesBody">
@@ -968,7 +968,7 @@ background-size:100% 48px, 78px 100%}
         <span class="panel-icon" style="color:#7b5be7">AI</span>
         <h3>LLM Referrals</h3>
       </div>
-      <span class="ai-tag">Human referrals only</span>
+      <span class="ai-tag">Proven human referrals only · campaign attribution is reported separately</span>
     </div>
 
     <div style="overflow:auto">
@@ -979,7 +979,7 @@ background-size:100% 48px, 78px 100%}
             <th>Visitors</th>
             <th>Sessions</th>
             <th>Leads</th>
-            <th>Conversion</th>
+            <th>Visitor → Lead</th>
             <th>Trend</th>
           </tr>
         </thead>
@@ -996,7 +996,7 @@ background-size:100% 48px, 78px 100%}
         <span class="panel-icon" style="color:#2d6cdf">◎</span>
         <h3>Language Performance</h3>
       </div>
-      <span class="ai-tag">All 8 languages · exact period visitors</span>
+      <span class="ai-tag">All 8 languages · exact period visitors · conversion = visitor → confirmed lead</span>
     </div>
 
     <div style="overflow:auto">
@@ -1009,7 +1009,7 @@ background-size:100% 48px, 78px 100%}
             <th>Pageviews</th>
             <th>Engaged</th>
             <th>Leads</th>
-            <th>Conversion</th>
+            <th>Visitor → Lead</th>
             <th>Search Clicks</th>
             <th>AI Requests</th>
             <th>Trend</th>
@@ -1290,6 +1290,104 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 
 <script src="/assets/js/intelligence-dashboard.js?v=20260924-countries3"></script>
 
-  <script src="assets/js/traffic-detail.js?v=20260924-traffic-clean1"></script>
+  <script src="assets/js/traffic-detail.js?v=20260924154649"></script>
+
+<script id="primadom-detail-routing">
+(function () {
+  "use strict";
+
+  const ROUTES = {
+    dashboard: "/",
+    traffic: "/traffic/",
+    bots: "/ai-bots/",
+    search: "/search/",
+    pages: "/pages/",
+    assistant: "/assistant/",
+    leads: "/leads/",
+    reports: "/reports/",
+    alerts: "/alerts/",
+    settings: "/settings/"
+  };
+
+  const PATH_TO_SCREEN = Object.fromEntries(
+    Object.entries(ROUTES).map(([screen, path]) => [path, screen])
+  );
+
+  function normalizedPath() {
+    let p = window.location.pathname || "/";
+    if (!p.endsWith("/")) p += "/";
+    return p;
+  }
+
+  function activateScreen(screen, push) {
+    const target = document.getElementById(screen);
+    if (!target) return;
+
+    document.querySelectorAll(".screen").forEach(el => {
+      el.classList.toggle("active", el.id === screen);
+    });
+
+    document.querySelectorAll(".nav-btn[data-screen]").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.screen === screen);
+    });
+
+    if (push && ROUTES[screen]) {
+      const next = ROUTES[screen];
+      if (normalizedPath() !== next) {
+        history.pushState({ screen }, "", next);
+      }
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("primadom:screenchange", {
+        detail: { screen }
+      })
+    );
+  }
+
+  document.addEventListener("click", function (event) {
+    const control = event.target.closest("[data-screen], [data-jump]");
+    if (!control) return;
+
+    const screen =
+      control.dataset.screen ||
+      control.dataset.jump;
+
+    if (!screen || !ROUTES[screen]) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    activateScreen(screen, true);
+  }, true);
+
+  window.addEventListener("popstate", function () {
+    const screen =
+      PATH_TO_SCREEN[normalizedPath()] ||
+      "dashboard";
+
+    activateScreen(screen, false);
+  });
+
+  function restoreRoute() {
+    const screen =
+      PATH_TO_SCREEN[normalizedPath()] ||
+      "dashboard";
+
+    activateScreen(screen, false);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", restoreRoute);
+  } else {
+    restoreRoute();
+  }
+
+  window.PrimadomRoutes = {
+    open: screen => activateScreen(screen, true),
+    routes: ROUTES
+  };
+})();
+</script>
+
 </body>
 </html>
