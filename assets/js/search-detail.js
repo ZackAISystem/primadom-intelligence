@@ -537,11 +537,6 @@
         ? "—"
         : num(visible);
 
-    renderLanguages(
-      data,
-      period === "today"
-    );
-
     renderContext(
       data
     );
@@ -706,13 +701,9 @@
     renderPages();
     renderQueries();
 
-    if (
-      period === "today"
-    ) {
-      renderTodayLanguages(
-        detail.top_search_pages || []
-      );
-    }
+    renderFreshLanguages(
+      detail.top_search_pages || []
+    );
 
     const countries =
       [...(detail.countries || [])]
@@ -1625,17 +1616,22 @@
       ).join("");
   }
 
-  function renderTodayLanguages(
+  function renderFreshLanguages(
     pageRows
   ) {
     const body =
       $("searchLanguagesBody");
 
-    const order =
-      [
-        "en","ru","hi","zh",
-        "es","fr","de","ar"
-      ];
+    const order = [
+      "en",
+      "ru",
+      "hi",
+      "zh",
+      "es",
+      "fr",
+      "de",
+      "ar"
+    ];
 
     const totals =
       new Map(
@@ -1650,42 +1646,93 @@
         )
       );
 
+    const global = {
+      impressions: 0,
+      clicks: 0
+    };
+
+
     for (
       const row of pageRows
     ) {
-      const code =
+      const path =
+        String(
+          row.url_path || ""
+        );
+
+      let code =
         String(
           row.language_code || ""
         ).toLowerCase();
 
-      if (!totals.has(code)) {
-        continue;
+
+      /*
+       * Prefer explicit page language.
+       * Fallback to URL prefix.
+       */
+      if (
+        !totals.has(code)
+      ) {
+        const match =
+          path.match(
+            /^\/([a-z]{2})\//
+          );
+
+        code =
+          match
+            ? match[1]
+            : "";
       }
 
-      const item =
-        totals.get(code);
 
-      item.impressions +=
-        Number(
-          row.impressions || 0
-        );
+      if (
+        totals.has(code)
+      ) {
+        const item =
+          totals.get(code);
 
-      item.clicks +=
-        Number(
-          row.clicks || 0
-        );
+        item.impressions +=
+          Number(
+            row.impressions || 0
+          );
+
+        item.clicks +=
+          Number(
+            row.clicks || 0
+          );
+
+      } else {
+        /*
+         * Homepage "/" and any genuinely non-language route.
+         * Never force these into English.
+         */
+        global.impressions +=
+          Number(
+            row.impressions || 0
+          );
+
+        global.clicks +=
+          Number(
+            row.clicks || 0
+          );
+      }
     }
 
-    const totalImpressions =
-      [...totals.values()]
+
+    const allImpressions =
+      [
+        ...totals.values(),
+        global
+      ]
         .reduce(
-          (sum, item) =>
+          (sum,item) =>
             sum +
             item.impressions,
           0
         );
 
-    body.innerHTML =
+
+    const languageRows =
       order.map(
         code => {
           const item =
@@ -1699,23 +1746,85 @@
               : 0;
 
           const share =
-            totalImpressions
+            allImpressions
               ? item.impressions /
-                totalImpressions *
+                allImpressions *
                 100
               : 0;
 
           return `
             <tr>
-              <td><b>${safe(LANGUAGES[code])}</b></td>
-              <td>${num(item.impressions)}</td>
-              <td>${num(item.clicks)}</td>
-              <td>${ctr.toFixed(2)}%</td>
-              <td>${share.toFixed(2)}%</td>
+              <td>
+                <b>${safe(LANGUAGES[code])}</b>
+              </td>
+
+              <td>
+                ${num(item.impressions)}
+              </td>
+
+              <td>
+                ${num(item.clicks)}
+              </td>
+
+              <td>
+                ${ctr.toFixed(2)}%
+              </td>
+
+              <td>
+                ${share.toFixed(2)}%
+              </td>
             </tr>
           `;
         }
-      ).join("");
+      );
+
+
+    if (
+      global.impressions > 0 ||
+      global.clicks > 0
+    ) {
+      const ctr =
+        global.impressions
+          ? global.clicks /
+            global.impressions *
+            100
+          : 0;
+
+      const share =
+        allImpressions
+          ? global.impressions /
+            allImpressions *
+            100
+          : 0;
+
+      languageRows.push(`
+        <tr>
+          <td>
+            <b>Global / Homepage</b>
+          </td>
+
+          <td>
+            ${num(global.impressions)}
+          </td>
+
+          <td>
+            ${num(global.clicks)}
+          </td>
+
+          <td>
+            ${ctr.toFixed(2)}%
+          </td>
+
+          <td>
+            ${share.toFixed(2)}%
+          </td>
+        </tr>
+      `);
+    }
+
+
+    body.innerHTML =
+      languageRows.join("");
   }
 
 
