@@ -487,6 +487,14 @@ background-size:100% 48px, 78px 100%}
 
 </style>
 
+
+<style id="traffic-engagement-tooltip-style">
+#traffic .engagement-info:hover .engagement-tooltip,
+#traffic .engagement-info:focus .engagement-tooltip {
+  display:block !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -891,6 +899,55 @@ background-size:100% 48px, 78px 100%}
       Engaged Sessions
       <b id="trafficEngagedSessions">—</b>
       <small id="trafficEngagementRate">—</small>
+<span
+  class="engagement-info"
+  tabindex="0"
+  aria-label="Engaged session definition"
+  style="
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:16px;
+    height:16px;
+    margin-left:5px;
+    border:1px solid #9aa7ba;
+    border-radius:50%;
+    color:#65758c;
+    font-size:10px;
+    font-weight:800;
+    cursor:help;
+    vertical-align:middle;
+  "
+>i
+  <span
+    class="engagement-tooltip"
+    role="tooltip"
+    style="
+      display:none;
+      position:absolute;
+      z-index:1000;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%);
+      width:310px;
+      padding:11px 13px;
+      background:#0f1f38;
+      color:#fff;
+      border-radius:9px;
+      box-shadow:0 8px 24px rgba(15,31,56,.18);
+      font-size:11px;
+      font-weight:500;
+      line-height:1.45;
+      text-align:left;
+      white-space:normal;
+    "
+  >
+    <b style="display:block;margin-bottom:4px">Engaged session</b>
+    A session with at least one engaged view: 10+ seconds of active viewing with 25%+ scroll, or 30+ seconds of active viewing. Background-tab time is excluded.
+  </span>
+</span>
+
     </div>
 
     <div class="detail-card">
