@@ -2445,7 +2445,314 @@
   // MASTER RENDER
   // ==========================================================
 
-  function renderDashboard(
+  
+  // ==========================================================
+  // TOP PAGES — REAL PAGE TYPE BADGES
+  // ==========================================================
+
+  function topPageTypeMeta(
+    rawType
+  ) {
+    const type =
+      String(
+        rawType || ""
+      ).toLowerCase();
+
+
+    const types = {
+      project_page: {
+        label: "Project",
+        bg: "#eaf2ff",
+        fg: "#2d6cdf"
+      },
+
+      district_page: {
+        label: "District",
+        bg: "#e8f7f1",
+        fg: "#16865a"
+      },
+
+      developer_page: {
+        label: "Developer",
+        bg: "#fff3df",
+        fg: "#a96500"
+      },
+
+      project_comparison_page: {
+        label: "Comparison",
+        bg: "#efe9ff",
+        fg: "#6f4de3"
+      },
+
+      district_comparison_page: {
+        label: "Comparison",
+        bg: "#efe9ff",
+        fg: "#6f4de3"
+      },
+
+      developer_comparison_page: {
+        label: "Comparison",
+        bg: "#efe9ff",
+        fg: "#6f4de3"
+      },
+
+      budget_page: {
+        label: "Budget",
+        bg: "#e7f7ef",
+        fg: "#16865a"
+      },
+
+      property_type_page: {
+        label: "Property Type",
+        bg: "#eaf2ff",
+        fg: "#2d6cdf"
+      },
+
+      buyer_scenario_page: {
+        label: "Buyer Scenario",
+        bg: "#f3edff",
+        fg: "#6f4de3"
+      },
+
+      origin_buyer_page: {
+        label: "Origin Buyer",
+        bg: "#f3edff",
+        fg: "#6f4de3"
+      },
+
+      ai_answer_page: {
+        label: "AI Answer",
+        bg: "#fff3df",
+        fg: "#a96500"
+      },
+
+      intent_page: {
+        label: "Intent",
+        bg: "#eef2f7",
+        fg: "#43546b"
+      }
+    };
+
+
+    if (types[type]) {
+      return types[type];
+    }
+
+
+    const fallback =
+      type
+        .replace(
+          /_page$/,
+          ""
+        )
+        .split("_")
+        .filter(Boolean)
+        .map(
+          part =>
+            part.charAt(0)
+              .toUpperCase() +
+            part.slice(1)
+        )
+        .join(" ");
+
+
+    return {
+      label:
+        fallback ||
+        "Page",
+
+      bg:
+        "#eef2f7",
+
+      fg:
+        "#43546b"
+    };
+  }
+
+
+  function applyTopPageTypeBadges(
+    payload
+  ) {
+    const data =
+      payload?.data ||
+      payload ||
+      {};
+
+    const pages =
+      Array.isArray(
+        data.top_pages
+      )
+        ? data.top_pages
+        : [];
+
+
+    if (!pages.length) {
+      return;
+    }
+
+
+    const heading =
+      Array
+        .from(
+          document.querySelectorAll(
+            "h1,h2,h3,h4,.card-title"
+          )
+        )
+        .find(
+          element =>
+            String(
+              element.textContent ||
+              ""
+            ).trim() ===
+            "Top Pages"
+        );
+
+
+    if (!heading) {
+      return;
+    }
+
+
+    let parent =
+      heading.parentElement;
+
+    let table =
+      null;
+
+
+    while (
+      parent &&
+      parent !== document.body
+    ) {
+      table =
+        parent.querySelector(
+          "table"
+        );
+
+      if (table) {
+        break;
+      }
+
+      parent =
+        parent.parentElement;
+    }
+
+
+    if (!table) {
+      return;
+    }
+
+
+    const headers =
+      Array.from(
+        table.querySelectorAll(
+          "thead th"
+        )
+      );
+
+
+    const typeIndex =
+      headers.findIndex(
+        th =>
+          String(
+            th.textContent ||
+            ""
+          )
+            .trim()
+            .toLowerCase() ===
+          "type"
+      );
+
+
+    if (typeIndex < 0) {
+      return;
+    }
+
+
+    const rows =
+      Array.from(
+        table.querySelectorAll(
+          "tbody tr"
+        )
+      );
+
+
+    rows.forEach(
+      (
+        row,
+        index
+      ) => {
+
+        const page =
+          pages[index];
+
+        if (!page) {
+          return;
+        }
+
+
+        const cell =
+          row.children[
+            typeIndex
+          ];
+
+        if (!cell) {
+          return;
+        }
+
+
+        const meta =
+          topPageTypeMeta(
+            page.page_type
+          );
+
+
+        const current =
+          cell.querySelector(
+            "[data-real-page-type]"
+          );
+
+
+        if (
+          current &&
+          current.dataset
+            .realPageType ===
+            String(
+              page.page_type ||
+              ""
+            )
+        ) {
+          return;
+        }
+
+
+        cell.innerHTML = `
+          <span
+            data-real-page-type="${String(
+              page.page_type || ""
+            )}"
+            style="
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              min-height:24px;
+              padding:3px 10px;
+              border-radius:999px;
+              white-space:nowrap;
+              font-size:12px;
+              font-weight:500;
+              line-height:1;
+              background:${meta.bg};
+              color:${meta.fg};
+            "
+          >${meta.label}</span>
+        `;
+      }
+    );
+  }
+
+
+function renderDashboard(
     data,
     range
   ) {
@@ -3326,5 +3633,35 @@
       activePeriod
     )
   );
+
+
+  // Keep Top Pages type badges synced after period changes.
+  const topPageTypeObserver =
+    new MutationObserver(
+      () => {
+        if (lastPayload) {
+          applyTopPageTypeBadges(
+            lastPayload
+          );
+        }
+      }
+    );
+
+
+  topPageTypeObserver.observe(
+    document.body,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+
+  if (lastPayload) {
+    applyTopPageTypeBadges(
+      lastPayload
+    );
+  }
+
 
 })();
