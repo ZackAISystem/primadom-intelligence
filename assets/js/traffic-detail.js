@@ -708,69 +708,76 @@
   ) {
     setLoading();
 
-    const url =
-      new URL(API);
+    const url = new URL(API);
 
-    url.searchParams.set(
-      "period",
-      period
-    );
+    // Worker contract uses "today", "7d", "30d", "90d", "custom"
+    url.searchParams.set("period", period);
 
-    if (
-      period === "custom" &&
-      from &&
-      to
-    ) {
-      url.searchParams.set(
-        "from",
-        from
-      );
-
-      url.searchParams.set(
-        "to",
-        to
-      );
+    if (period === "custom" && from && to) {
+      url.searchParams.set("from", from);
+      url.searchParams.set("to", to);
     }
 
     try {
-      const response =
-        await fetch(
-          url.toString(),
-          {
-            headers: {
-              Accept: "application/json"
-            }
-          }
-        );
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        mode: "cors",
+        credentials: "omit",
+        cache: "no-store",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP ${response.status}`
-        );
+        throw new Error(`Overview API HTTP ${response.status}`);
       }
 
-      const data =
-        await response.json();
+      const envelope = await response.json();
 
-    // Production overview API envelope:
-    // { ok, service, version, range, data }
-    const trafficEnvelope = data;
-    const trafficData =
-      trafficEnvelope && trafficEnvelope.data
-        ? trafficEnvelope.data
-        : data;
+      if (!envelope || envelope.ok !== true) {
+        throw new Error("Overview API returned ok != true");
+      }
 
-    const trafficRange =
-      trafficEnvelope && trafficEnvelope.range
-        ? trafficEnvelope.range
-        : null;
+      if (!envelope.data || typeof envelope.data !== "object") {
+        throw new Error("Overview API response.data is missing");
+      }
 
+      const data = envelope.data;
 
-      renderAll(
-        data,
-        period
+      // range is top-level in the production API,
+      // while all analytics datasets live inside response.data.
+      data.range = envelope.range || null;
+
+      renderAll(data, period);
+
+      console.info(
+        "[Traffic & Analytics] loaded",
+        {
+          period,
+          range: envelope.range,
+          kpis: data.kpis,
+          sources: Array.isArray(data.top_sources)
+            ? data.top_sources.length
+            : 0,
+          languages: Array.isArray(data.languages)
+            ? data.languages.length
+            : 0,
+          countries: Array.isArray(data.countries)
+            ? data.countries.length
+            : 0,
+          traffic_daily: Array.isArray(data.traffic_daily)
+            ? data.traffic_daily.length
+            : 0
+        }
       );
+
     } catch (error) {
+      console.error(
+        "[Traffic & Analytics] load failed:",
+        error
+      );
+
       setError(error);
     }
   }
@@ -807,7 +814,7 @@
         );
 
       if (
-        ["1d", "7d", "30d", "90d", "custom"]
+        ["today", "7d", "30d", "90d", "custom"]
           .includes(value.period)
       ) {
         return value;
