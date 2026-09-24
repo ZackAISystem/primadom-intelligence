@@ -849,13 +849,13 @@ background-size:100% 48px, 78px 100%}
     </div>
 
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <div class="period-switch traffic-period-switch">
-        <button data-traffic-period="1d">1D</button>
-        <button data-traffic-period="7d" class="active">7D</button>
-        <button data-traffic-period="30d">30D</button>
-        <button data-traffic-period="90d">90D</button>
-        <button data-traffic-period="custom">Custom</button>
-      </div>
+      <div class="period traffic-period" id="trafficPeriod">
+  <button data-traffic-period="1d">1D</button>
+  <button class="active" data-traffic-period="7d">7D</button>
+  <button data-traffic-period="30d">30D</button>
+  <button data-traffic-period="90d">90D</button>
+  <button data-traffic-period="custom">Custom ◫</button>
+</div>
 
       <button class="view-link" data-jump="dashboard">← Dashboard</button>
     </div>
@@ -1290,6 +1290,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 
 <script src="/assets/js/intelligence-dashboard.js?v=20260924-countries3"></script>
 
-  <script src="assets/js/traffic-detail.js?v=20260924-1"></script>
+  <script src="assets/js/traffic-detail.js?v=20260924-traffic2"></script>
 </body>
 </html>

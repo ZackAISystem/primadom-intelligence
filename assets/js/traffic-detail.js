@@ -655,18 +655,17 @@
   }
 
   function renderAll(data, requestedPeriod) {
-    renderKpis(data);
-    renderChart(data);
-    renderSources(data);
-    renderChannelMix(data);
-    renderLlm(data);
-    renderLanguages(data);
-    renderCountries(data);
+    renderKpis(trafficData);
+    renderChart(trafficData);
+    renderSources(trafficData);
+    renderChannelMix(trafficData);
+    renderLlm(trafficData);
+    renderLanguages(trafficData);
+    renderCountries(trafficData);
 
     setText(
       "trafficRangeLabel",
-      periodLabel(
-        data.range,
+      periodLabel(trafficRange,
         requestedPeriod.toUpperCase()
       )
     );
@@ -752,6 +751,20 @@
 
       const data =
         await response.json();
+
+    // Production overview API envelope:
+    // { ok, service, version, range, data }
+    const trafficEnvelope = data;
+    const trafficData =
+      trafficEnvelope && trafficEnvelope.data
+        ? trafficEnvelope.data
+        : data;
+
+    const trafficRange =
+      trafficEnvelope && trafficEnvelope.range
+        ? trafficEnvelope.range
+        : null;
+
 
       renderAll(
         data,
@@ -959,4 +972,18 @@
   } else {
     init();
   }
+
+  // Traffic detail uses the exact Dashboard period component styling.
+  function syncTrafficPeriodUI(value) {
+    document
+      .querySelectorAll("#traffic .period [data-traffic-period]")
+      .forEach(button => {
+        button.classList.toggle(
+          "active",
+          String(button.dataset.trafficPeriod || "").toLowerCase() ===
+          String(value || "").toLowerCase()
+        );
+      });
+  }
+
 })();
