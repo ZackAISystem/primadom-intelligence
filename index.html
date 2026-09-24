@@ -833,6 +833,24 @@ background-size:100% 48px, 78px 100%}
   }
 }
 
+
+
+/* Pages filters — compact final layout */
+#pages .pages-search{
+  width:190px;
+}
+
+#pages .pages-language{
+  width:110px;
+}
+
+#pages .pages-type{
+  width:135px;
+}
+
+#pages .pages-performance{
+  width:190px;
+}
 </style>
 
 </head>
@@ -900,7 +918,7 @@ background-size:100% 48px, 78px 100%}
     <div class="kpi clickable" data-title="AI & Bot Requests" data-detail="AI search, assistant fetchers, training bots, search crawlers and SEO bots.">
       <div class="kpi-head"><span class="kpi-icon blue">◉</span>AI & Bot Requests</div><div class="kpi-value">8,441</div><div class="kpi-sub"><span class="up">↑ +25.6%</span></div>
     </div>
-    
+
 <div class="kpi clickable google-search-kpi"
      data-title="Google Search"
      data-detail="Google Search Console impressions, clicks, CTR and average position.">
@@ -962,7 +980,7 @@ background-size:100% 48px, 78px 100%}
       </div>
     </div>
 
-    
+
 
   </div>
 
@@ -1168,7 +1186,7 @@ background-size:100% 48px, 78px 100%}
           <div class="country-line"><span><span class="flag">🇦🇺</span>Australia</span><b>5.6%</b><span>72</span></div>
           <div class="country-line"><span><span class="flag">🇦🇪</span>UAE</span><b>4.9%</b><span>63</span></div>
         </div>
-        
+
       </div>
     </div>
 
@@ -1184,7 +1202,7 @@ background-size:100% 48px, 78px 100%}
     </div>
   </div>
 
-  
+
 </section>
 
 
@@ -2128,75 +2146,22 @@ background-size:100% 48px, 78px 100%}
         </select>
 
 
-        <select
-          id="pagesActivityFilter"
-          class="pages-filter pages-activity"
-        >
-          <option value="any">
-            Any activity
-          </option>
-
-          <option value="human">
-            Human traffic
-          </option>
-
-          <option value="search">
-            Google visibility
-          </option>
-
-          <option value="clicks">
-            Google clicks
-          </option>
-
-          <option value="ai">
-            AI crawled
-          </option>
-
-          <option value="leads">
-            Leads
-          </option>
-
-          <option value="all">
-            All pages
-          </option>
-
-        </select>
-
 
         <select
-          id="pagesSortFilter"
-          class="pages-filter pages-sort"
+          id="pagesPerformanceFilter"
+          class="pages-filter pages-performance"
         >
-
-          <option value="visitors">
-            Visitors ↓
-          </option>
-
-          <option value="pageviews">
-            Pageviews ↓
-          </option>
-
-          <option value="leads">
-            Leads ↓
-          </option>
-
-          <option value="google_impressions">
-            Google impressions ↓
-          </option>
-
-          <option value="google_clicks">
-            Google clicks ↓
-          </option>
-
-          <option value="ai_requests">
-            AI requests ↓
-          </option>
-
-          <option value="last_activity">
-            Last activity ↓
-          </option>
-
+          <option value="visited">Most visited ↓</option>
+          <option value="viewed">Most viewed ↓</option>
+          <option value="search">Most visible in Google ↓</option>
+          <option value="clicks">Most Google clicks ↓</option>
+          <option value="ai">Most AI crawled ↓</option>
+          <option value="leads">Pages with leads ↓</option>
+          <option value="recent">Recently active ↓</option>
+          <option value="active">All active pages</option>
+          <option value="all">All pages</option>
         </select>
+
 
       </div>
 
@@ -2618,6 +2583,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 
 <script src="/assets/js/ai-bots-detail.js?v=20260924193234"></script>
 <script src="/assets/js/search-detail.js?v=20260924194454"></script>
-<script src="/assets/js/pages-detail.js?v=20260924201502"></script>
+<script src="/assets/js/pages-detail.js?v=20260924204313"></script>
 </body>
 </html>

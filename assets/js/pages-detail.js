@@ -427,8 +427,6 @@
 
     const activity =
       payload.activity ||
-      $("pagesActivityFilter")
-        ?.value ||
       "any";
 
 
@@ -617,6 +615,56 @@
   }
 
 
+  const PERFORMANCE = {
+
+    visited: {
+      activity: "human",
+      sort: "visitors"
+    },
+
+    viewed: {
+      activity: "human",
+      sort: "pageviews"
+    },
+
+    search: {
+      activity: "search",
+      sort: "google_impressions"
+    },
+
+    clicks: {
+      activity: "clicks",
+      sort: "google_clicks"
+    },
+
+    ai: {
+      activity: "ai",
+      sort: "ai_requests"
+    },
+
+    leads: {
+      activity: "leads",
+      sort: "leads"
+    },
+
+    recent: {
+      activity: "any",
+      sort: "last_activity"
+    },
+
+    active: {
+      activity: "any",
+      sort: "visitors"
+    },
+
+    all: {
+      activity: "all",
+      sort: "visitors"
+    }
+
+  };
+
+
   async function loadCatalog() {
     $("pagesCatalogBody").innerHTML =
       '<tr><td colspan="11">Loading…</td></tr>';
@@ -658,16 +706,23 @@
         ?.value;
 
 
-    const activity =
-      $("pagesActivityFilter")
+    const performance =
+      $("pagesPerformanceFilter")
         ?.value ||
-      "any";
+      "visited";
+
+
+    const config =
+      PERFORMANCE[performance] ||
+      PERFORMANCE.visited;
+
+
+    const activity =
+      config.activity;
 
 
     const sort =
-      $("pagesSortFilter")
-        ?.value ||
-      "visitors";
+      config.sort;
 
 
     if (query) {
@@ -880,8 +935,7 @@
   [
     "pagesLanguageFilter",
     "pagesTypeFilter",
-    "pagesActivityFilter",
-    "pagesSortFilter"
+    "pagesPerformanceFilter"
   ].forEach(
     id => {
       $(id)
@@ -960,12 +1014,8 @@
     );
 
 
-    $("pagesActivityFilter").value =
-      "any";
-
-
-    $("pagesSortFilter").value =
-      "visitors";
+    $("pagesPerformanceFilter").value =
+      "visited";
 
 
     if (
