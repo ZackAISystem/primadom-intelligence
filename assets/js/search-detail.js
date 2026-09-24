@@ -201,14 +201,16 @@
   }
 
   function axisDate(value) {
-    const m =
-      String(value || "")
-        .match(
-          /^(\d{4})-(\d{2})-(\d{2})/
-        );
+    const text =
+      String(value || "");
 
-    if (!m) {
-      return String(value || "");
+    const match =
+      text.match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/
+      );
+
+    if (!match) {
+      return text;
     }
 
     const months = [
@@ -217,8 +219,90 @@
       "Sep","Oct","Nov","Dec"
     ];
 
-    return `${months[Number(m[2])-1]} ${Number(m[3])}`;
+    if (match[4]) {
+      let hour =
+        Number(match[4]);
+
+      const suffix =
+        hour >= 12
+          ? "PM"
+          : "AM";
+
+      hour =
+        hour % 12 ||
+        12;
+
+      return `${hour} ${suffix}`;
+    }
+
+    return `${months[Number(match[2])-1]} ${Number(match[3])}`;
   }
+
+
+  function rangeDate(value) {
+    const text =
+      String(value || "");
+
+    const match =
+      text.match(
+        /^(\d{4})-(\d{2})-(\d{2})/
+      );
+
+    if (!match) {
+      return text;
+    }
+
+    const months = [
+      "Jan","Feb","Mar","Apr",
+      "May","Jun","Jul","Aug",
+      "Sep","Oct","Nov","Dec"
+    ];
+
+    return `${months[Number(match[2])-1]} ${Number(match[3])}`;
+  }
+
+
+  function tooltipDate(value) {
+    const text =
+      String(value || "");
+
+    const match =
+      text.match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/
+      );
+
+    if (!match) {
+      return text;
+    }
+
+    const months = [
+      "Jan","Feb","Mar","Apr",
+      "May","Jun","Jul","Aug",
+      "Sep","Oct","Nov","Dec"
+    ];
+
+    const day =
+      `${months[Number(match[2])-1]} ${Number(match[3])}`;
+
+    if (!match[4]) {
+      return day;
+    }
+
+    let hour =
+      Number(match[4]);
+
+    const suffix =
+      hour >= 12
+        ? "PM"
+        : "AM";
+
+    hour =
+      hour % 12 ||
+      12;
+
+    return `${day} · ${hour} ${suffix}`;
+  }
+
 
   function previousDay(value) {
     const m =
@@ -537,41 +621,97 @@
         ? "Latest data includes preliminary GSC observations"
         : "Final Google Search Console data";
 
-    let coverageText =
-      `<b>Google Search Console Property API</b> · selected period <b>${safe(range.from)} → ${safe(range.to)}</b> · data through <b>${safe(dateLabel(detail.latest_date))}</b>.`;
+    const timeline =
+      detail.timeline || [];
+
+    const firstAvailable =
+      timeline[0]?.data_date ||
+      null;
+
+    const lastAvailable =
+      timeline.at(-1)?.data_date ||
+      detail.latest_date ||
+      null;
+
+    let coverageText;
 
     if (
-      preliminary &&
-      detail.first_incomplete_date
+      period === "today"
     ) {
-      coverageText +=
-        ` Preliminary from <b>${safe(dateLabel(detail.first_incomplete_date))}</b>; newest values may still change.`;
+      coverageText =
+        `<b>Google Search Console Property API</b> · last 24 hours · hourly preliminary data <b>${safe(dateLabel(detail.window_from))} → ${safe(dateLabel(detail.window_to))}</b>. Newest values may still change.`;
 
-      const finalThrough =
-        previousDay(
-          detail.first_incomplete_date
-        );
+      $("searchRangeLabel").textContent =
+        `Last 24 hours · ${dateLabel(detail.window_from)} → ${dateLabel(detail.window_to)} · preliminary`;
 
-      if (finalThrough) {
+    } else {
+      coverageText =
+        `<b>Google Search Console Property API</b> · selected period <b>${safe(rangeDate(range.from))} → ${safe(rangeDate(range.to))}</b>`;
+
+      if (
+        firstAvailable &&
+        String(firstAvailable).slice(0,10) >
+        String(range.from).slice(0,10)
+      ) {
         coverageText +=
-          ` Final through <b>${safe(dateLabel(finalThrough))}</b>.`;
+          ` · available GSC history <b>${safe(rangeDate(firstAvailable))} → ${safe(rangeDate(lastAvailable))}</b>`;
+      } else {
+        coverageText +=
+          ` · data through <b>${safe(rangeDate(lastAvailable))}</b>`;
+      }
+
+      coverageText += ".";
+
+      if (
+        preliminary &&
+        detail.first_incomplete_date
+      ) {
+        coverageText +=
+          ` Preliminary from <b>${safe(rangeDate(detail.first_incomplete_date))}</b>; newest values may still change.`;
+
+        const finalThrough =
+          previousDay(
+            detail.first_incomplete_date
+          );
+
+        if (finalThrough) {
+          coverageText +=
+            ` Final through <b>${safe(rangeDate(finalThrough))}</b>.`;
+        }
+      }
+
+      if (
+        firstAvailable &&
+        String(firstAvailable).slice(0,10) >
+        String(range.from).slice(0,10)
+      ) {
+        $("searchRangeLabel").textContent =
+          `Selected ${rangeDate(range.from)} → ${rangeDate(range.to)} · available history ${rangeDate(firstAvailable)} → ${rangeDate(lastAvailable)}`;
+      } else {
+        $("searchRangeLabel").textContent =
+          preliminary
+            ? `${rangeDate(range.from)} → ${rangeDate(range.to)} · latest through ${rangeDate(lastAvailable)} · includes preliminary`
+            : `${rangeDate(range.from)} → ${rangeDate(range.to)} · GSC through ${rangeDate(lastAvailable)}`;
       }
     }
 
     $("searchCoverageNotice").innerHTML =
       coverageText;
 
-    $("searchRangeLabel").textContent =
-      preliminary
-        ? `${range.from} → ${range.to} · latest through ${dateLabel(detail.latest_date)} · includes preliminary`
-        : `${range.from} → ${range.to} · GSC through ${dateLabel(detail.latest_date)}`;
-
     renderTimeline(
-      detail.timeline || []
+      timeline
     );
 
     renderPages();
     renderQueries();
+
+    if (
+      period === "today"
+    ) {
+      renderTodayLanguages(
+        detail.top_search_pages || []
+      );
+    }
 
     const countries =
       [...(detail.countries || [])]
@@ -825,18 +965,37 @@
         )
       );
 
+    const plotPadding =
+      Math.min(
+        24,
+        Math.max(
+          14,
+          usableW /
+          Math.max(
+            rows.length,
+            1
+          ) /
+          2
+        )
+      );
+
+    const plotWidth =
+      usableW -
+      plotPadding * 2;
+
     const x =
       index =>
         left +
+        plotPadding +
         (
           rows.length === 1
-            ? usableW / 2
+            ? plotWidth / 2
             : index /
               (
                 rows.length -
                 1
               ) *
-              usableW
+              plotWidth
         );
 
     const yI =
@@ -915,7 +1074,7 @@
               rx="3"
               fill="#dce8ff"
             >
-              <title>${safe(axisDate(row.data_date))} · ${num(value)} impressions · ${num(row.clicks)} clicks</title>
+              <title>${safe(tooltipDate(row.data_date))} · ${num(value)} impressions · ${num(row.clicks)} clicks</title>
             </rect>
           `;
         }
@@ -951,7 +1110,7 @@
       points.map(
         point => `
           <circle cx="${point.x}" cy="${point.y}" r="4" fill="#16a36a">
-            <title>${safe(axisDate(point.date))} · ${num(point.clicks)} clicks</title>
+            <title>${safe(tooltipDate(point.date))} · ${num(point.clicks)} clicks</title>
           </circle>
         `
       ).join("");
@@ -960,13 +1119,25 @@
      * 7D = every date.
      * Longer periods = max roughly 9–10 readable labels.
      */
+    const desiredLabels =
+      period === "today"
+        ? 8
+        : period === "7d"
+          ? 7
+          : period === "30d"
+            ? 7
+            : period === "90d"
+              ? 9
+              : 9;
+
     const tickStep =
-      rows.length <= 10
-        ? 1
-        : Math.ceil(
-            rows.length /
-            9
-          );
+      Math.max(
+        1,
+        Math.ceil(
+          rows.length /
+          desiredLabels
+        )
+      );
 
     const labels =
       rows.map(
@@ -1128,6 +1299,100 @@
         }
       ).join("");
   }
+
+  function renderTodayLanguages(
+    pageRows
+  ) {
+    const body =
+      $("searchLanguagesBody");
+
+    const order =
+      [
+        "en","ru","hi","zh",
+        "es","fr","de","ar"
+      ];
+
+    const totals =
+      new Map(
+        order.map(
+          code => [
+            code,
+            {
+              impressions: 0,
+              clicks: 0
+            }
+          ]
+        )
+      );
+
+    for (
+      const row of pageRows
+    ) {
+      const code =
+        String(
+          row.language_code || ""
+        ).toLowerCase();
+
+      if (!totals.has(code)) {
+        continue;
+      }
+
+      const item =
+        totals.get(code);
+
+      item.impressions +=
+        Number(
+          row.impressions || 0
+        );
+
+      item.clicks +=
+        Number(
+          row.clicks || 0
+        );
+    }
+
+    const totalImpressions =
+      [...totals.values()]
+        .reduce(
+          (sum, item) =>
+            sum +
+            item.impressions,
+          0
+        );
+
+    body.innerHTML =
+      order.map(
+        code => {
+          const item =
+            totals.get(code);
+
+          const ctr =
+            item.impressions
+              ? item.clicks /
+                item.impressions *
+                100
+              : 0;
+
+          const share =
+            totalImpressions
+              ? item.impressions /
+                totalImpressions *
+                100
+              : 0;
+
+          return `
+            <tr>
+              <td><b>${safe(LANGUAGES[code])}</b></td>
+              <td>${num(item.impressions)}</td>
+              <td>${num(item.clicks)}</td>
+              <td>${ctr.toFixed(2)}%</td>
+              <td>${share.toFixed(2)}%</td>
+            </tr>
+          `;
+        }
+      ).join("");
+  }
+
 
   function renderContext(
     data
