@@ -495,6 +495,15 @@ background-size:100% 48px, 78px 100%}
 }
 </style>
 
+
+<style id="ai-bots-detail-style">
+@media(max-width:900px){
+  #bots .bot-two-column{
+    grid-template-columns:1fr !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1111,11 +1120,190 @@ background-size:100% 48px, 78px 100%}
 
 
 <section class="screen" id="bots">
-  <div class="detail-header"><div><h2>AI & Bot Intelligence</h2><p>Search crawlers, AI search, assistant fetchers, training and SEO bots.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
-  <div class="detail-grid">
-    <div class="detail-card">Bot Requests<b>8,441</b><small class="up">↑ 25.6%</small></div><div class="detail-card">Pages Crawled<b>6,658</b><small>Mapped canonical pages</small></div><div class="detail-card">HTTP 2xx<b>99.8%</b><small>Healthy crawler access</small></div><div class="detail-card">AI Operators<b>8</b><small>OpenAI, Google, Anthropic…</small></div>
+
+  <div class="detail-header">
+    <div>
+      <h2>AI & Bot Intelligence</h2>
+      <p>Search crawlers, AI search, assistant fetchers, training and SEO bots.</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="period" id="botPeriodControl">
+        <button data-bot-period="today">Today</button>
+        <button class="active" data-bot-period="7d">7D</button>
+        <button data-bot-period="30d">30D</button>
+        <button data-bot-period="90d">90D</button>
+        <button data-bot-period="custom">Custom ◫</button>
+      </div>
+
+      <button class="view-link" data-jump="dashboard">← Dashboard</button>
+    </div>
   </div>
-  <div class="big-table"><h3>Crawler Registry</h3><table><tr><th>Operator</th><th>Crawler</th><th>Purpose</th><th>Requests</th><th>Pages</th><th>Errors</th></tr><tr><td><span class="brand-logo logo-openai" style="display:inline-grid;vertical-align:middle;margin-right:5px">◎</span>OpenAI</td><td>OAI-SearchBot</td><td>AI Search</td><td>2,941</td><td>31,205</td><td>0</td></tr><tr><td><span class="brand-logo logo-google" style="display:inline-grid;vertical-align:middle;margin-right:5px">G</span>Google</td><td>Googlebot</td><td>Search</td><td>4,892</td><td>42,716</td><td>1</td></tr><tr><td><span class="brand-logo logo-claude" style="display:inline-grid;vertical-align:middle;margin-right:5px">✳</span>Anthropic</td><td>ClaudeBot</td><td>Training</td><td>842</td><td>9,671</td><td>0</td></tr><tr><td><span class="brand-logo logo-perplexity" style="display:inline-grid;vertical-align:middle;margin-right:5px">P</span>Perplexity</td><td>PerplexityBot</td><td>AI Search</td><td>876</td><td>7,944</td><td>0</td></tr></table></div>
+
+  <div
+    id="botCustomRange"
+    style="
+      display:none;
+      justify-content:flex-end;
+      align-items:center;
+      gap:8px;
+      margin:-4px 0 16px;
+      flex-wrap:wrap
+    "
+  >
+    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+      From
+      <input
+        type="date"
+        id="botFrom"
+        style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px"
+      >
+    </label>
+
+    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+      To
+      <input
+        type="date"
+        id="botTo"
+        style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px"
+      >
+    </label>
+
+    <button class="view-link" id="botApplyCustom">Apply</button>
+  </div>
+
+  <div class="detail-grid">
+
+    <div class="detail-card">
+      AI & Bot Requests
+      <b id="botRequests">—</b>
+      <small id="botRequestsMeta">—</small>
+    </div>
+
+    <div class="detail-card">
+      Pages Crawled
+      <b id="botPages">—</b>
+      <small>Mapped canonical pages</small>
+    </div>
+
+    <div class="detail-card">
+      Crawler Errors
+      <b id="botErrors">—</b>
+      <small id="botErrorRate">—</small>
+    </div>
+
+    <div class="detail-card">
+      AI Operators
+      <b id="botOperators">—</b>
+      <small id="botOperatorsMeta">—</small>
+    </div>
+
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <div class="panel-head">
+      <div>
+        <h3>Bot Activity Over Time</h3>
+        <p id="botRangeLabel">AI & bot requests for selected period</p>
+      </div>
+    </div>
+
+    <div
+      id="botActivityChart"
+      style="height:320px;padding:8px 4px 0"
+    >
+      —
+    </div>
+  </div>
+
+  <div
+    style="
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:16px;
+      margin-top:16px
+    "
+    class="bot-two-column"
+  >
+
+    <div class="big-table" style="margin-top:0">
+      <h3>Activity by Purpose</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Purpose</th>
+            <th>Requests</th>
+            <th>Pages</th>
+            <th>Errors</th>
+          </tr>
+        </thead>
+        <tbody id="botPurposeBody">
+          <tr><td colspan="4">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="big-table" style="margin-top:0">
+      <h3>AI & Bot Requests by Language</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Requests</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody id="botLanguagesBody">
+          <tr><td colspan="3">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="big-table" style="margin-top:16px">
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:20px;
+      flex-wrap:wrap
+    ">
+      <div>
+        <h3 style="margin-bottom:4px">Crawler Registry</h3>
+        <p
+          id="botCoverageLabel"
+          style="margin:0;color:#77859a;font-size:12px"
+        >—</p>
+      </div>
+
+      <div
+        id="botRegistryCount"
+        style="font-size:12px;color:#77859a"
+      >—</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Operator</th>
+          <th>Crawler</th>
+          <th>Purpose</th>
+          <th>Channel</th>
+          <th>Requests</th>
+          <th>Pages</th>
+          <th>Errors</th>
+        </tr>
+      </thead>
+
+      <tbody id="botRegistryBody">
+        <tr><td colspan="7">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
 </section>
 
 <section class="screen" id="search">
@@ -1446,5 +1634,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 })();
 </script>
 
+<script src="/assets/js/ai-bots-detail.js?v=20260924160139"></script>
 </body>
 </html>
