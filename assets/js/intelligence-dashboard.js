@@ -1550,7 +1550,26 @@
       </div>
     `;
 
+    const countryHeader = `
+      <div class="country-line" style="
+        padding-bottom:7px;
+        margin-bottom:2px;
+        border-bottom:1px solid var(--line);
+        font-size:10px;
+        font-weight:600;
+        color:var(--muted);
+      ">
+        <span>Country</span>
+        <b style="
+          color:var(--muted);
+          font-size:10px;
+        ">%</b>
+        <span>Visitors</span>
+      </div>
+    `;
+
     list.innerHTML =
+      countryHeader +
       countryRows +
       coverageNote;
   }
