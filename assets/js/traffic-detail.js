@@ -4,42 +4,7 @@
   const API =
     "https://analytics.primadom.ai/api/intelligence/overview";
 
-  const STORAGE_KEY =
-    "primadom-intelligence-detail-period";
-
-  const LANGUAGE_NAMES = {
-    en: "English",
-    ru: "Russian",
-    hi: "Hindi",
-    zh: "Chinese",
-    es: "Spanish",
-    fr: "French",
-    de: "German",
-    ar: "Arabic"
-  };
-
-  const COUNTRY_NAMES = {
-    AE: "United Arab Emirates",
-    US: "United States",
-    GB: "United Kingdom",
-    IN: "India",
-    RU: "Russia",
-    DE: "Germany",
-    FR: "France",
-    ES: "Spain",
-    CN: "China",
-    SA: "Saudi Arabia",
-    QA: "Qatar",
-    KW: "Kuwait",
-    BH: "Bahrain",
-    OM: "Oman",
-    CA: "Canada",
-    AU: "Australia",
-    SG: "Singapore"
-  };
-
-  const $ = id =>
-    document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
   const num = value =>
     Number(value || 0).toLocaleString("en-US");
@@ -55,83 +20,152 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
 
+  const conversion = (leads, visitors) =>
+    Number(visitors || 0) > 0
+      ? (Number(leads || 0) / Number(visitors)) * 100
+      : 0;
+
   function setText(id, value) {
     const el = $(id);
     if (el) el.textContent = value;
   }
 
-  function countryFlag(code) {
-    const value =
-      String(code || "").toUpperCase();
-
-    if (!/^[A-Z]{2}$/.test(value)) {
-      return "◎";
-    }
-
-    return String.fromCodePoint(
-      ...[...value].map(
-        c => 127397 + c.charCodeAt()
-      )
-    );
-  }
-
-  function countryName(code) {
-    const value =
-      String(code || "").toUpperCase();
-
-    return COUNTRY_NAMES[value] || value || "Unknown";
-  }
-
   function channelLabel(row) {
     const raw =
-      String(
-        row.channel_group ||
-        row.channel ||
-        ""
-      ).toLowerCase();
+      row.channel_name ||
+      row.channel_group ||
+      row.channel ||
+      row.source_channel ||
+      "—";
 
-    const labels = {
-      direct: "Direct",
-      organic_search: "Organic Search",
-      paid_search: "Paid Search",
-      llm_referral: "LLM Referral",
-      llm_campaign: "LLM Campaign",
-      referral: "Referral",
-      social: "Social",
-      paid_social: "Paid Social",
-      email: "Email"
-    };
-
-    return labels[raw] ||
-      raw.replaceAll("_", " ")
-         .replace(/\b\w/g, x => x.toUpperCase()) ||
-      "Other";
+    return String(raw)
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, c => c.toUpperCase());
   }
 
-  function periodLabel(range, fallback) {
-    if (!range) return fallback || "Selected period";
+  function rangeLabel(range) {
+    if (!range) return "Selected period";
 
-    if (range.from && range.to) {
-      if (range.from === range.to) {
-        return `${range.from} · 1 day`;
-      }
+    const from = range.from || "";
+    const to = range.to || "";
+    const days = range.days;
 
-      return `${range.from} → ${range.to} · ${Number(
-        range.days || 0
-      )} days`;
+    if (from && to && days) {
+      return `${from} → ${to} · ${days} day${Number(days) === 1 ? "" : "s"}`;
     }
 
-    return fallback || "Selected period";
+    return from && to
+      ? `${from} → ${to}`
+      : "Selected period";
   }
 
-  function conversion(leads, visitors) {
-    const l = Number(leads || 0);
-    const v = Number(visitors || 0);
+  /* ========================================================
+     LOADING / ERROR
+     ======================================================== */
 
-    return v > 0
-      ? (l / v) * 100
-      : 0;
+  function setLoading() {
+    [
+      "trafficVisitors",
+      "trafficSessions",
+      "trafficPageviews",
+      "trafficEngagedSessions",
+      "trafficLeads",
+      "trafficConversion"
+    ].forEach(id => setText(id, "Loading…"));
+
+    setText("trafficSessionsMeta", "—");
+    setText("trafficPageviewsMeta", "—");
+    setText("trafficEngagementRate", "—");
+    setText("trafficRangeLabel", "Loading…");
+
+    const chart = $("trafficDetailChart");
+    if (chart) {
+      chart.innerHTML =
+        '<div style="display:grid;place-items:center;height:100%;color:#71809a">Loading traffic data…</div>';
+    }
+
+    const sources = $("trafficSourcesBody");
+    if (sources) {
+      sources.innerHTML =
+        '<tr><td colspan="6">Loading…</td></tr>';
+    }
+
+    const llm = $("trafficLlmBody");
+    if (llm) {
+      llm.innerHTML =
+        '<tr><td colspan="6">Loading…</td></tr>';
+    }
+
+    const languages = $("trafficLanguagesBody");
+    if (languages) {
+      languages.innerHTML =
+        '<tr><td colspan="10">Loading…</td></tr>';
+    }
+
+    const countries = $("trafficCountriesBody");
+    if (countries) {
+      countries.innerHTML =
+        '<tr><td colspan="4">Loading…</td></tr>';
+    }
+
+    const mix = $("trafficChannelMix");
+    if (mix) mix.textContent = "Loading…";
   }
+
+  function setError(error) {
+    console.error("[Traffic & Analytics]", error);
+
+    [
+      "trafficVisitors",
+      "trafficSessions",
+      "trafficPageviews",
+      "trafficEngagedSessions",
+      "trafficLeads",
+      "trafficConversion"
+    ].forEach(id => setText(id, "—"));
+
+    setText("trafficSessionsMeta", "—");
+    setText("trafficPageviewsMeta", "—");
+    setText("trafficEngagementRate", "—");
+    setText("trafficRangeLabel", "Data unavailable");
+
+    const chart = $("trafficDetailChart");
+    if (chart) {
+      chart.innerHTML =
+        '<div style="display:grid;place-items:center;height:100%;color:#71809a">Traffic data could not be loaded.</div>';
+    }
+
+    const sources = $("trafficSourcesBody");
+    if (sources) {
+      sources.innerHTML =
+        '<tr><td colspan="6">Data unavailable.</td></tr>';
+    }
+
+    const llm = $("trafficLlmBody");
+    if (llm) {
+      llm.innerHTML =
+        '<tr><td colspan="6">Data unavailable.</td></tr>';
+    }
+
+    const languages = $("trafficLanguagesBody");
+    if (languages) {
+      languages.innerHTML =
+        '<tr><td colspan="10">Data unavailable.</td></tr>';
+    }
+
+    const countries = $("trafficCountriesBody");
+    if (countries) {
+      countries.innerHTML =
+        '<tr><td colspan="4">Data unavailable.</td></tr>';
+    }
+
+    const mix = $("trafficChannelMix");
+    if (mix) mix.textContent = "Data unavailable.";
+  }
+
+  /* ========================================================
+     KPI
+     ======================================================== */
 
   function renderKpis(data) {
     const k = data.kpis || {};
@@ -152,11 +186,7 @@
       Number(k.leads || 0);
 
     const engagementRate =
-      Number.isFinite(Number(k.engagement_rate))
-        ? Number(k.engagement_rate)
-        : sessions > 0
-          ? (engaged / sessions) * 100
-          : 0;
+      Number(k.engagement_rate || 0);
 
     setText(
       "trafficVisitors",
@@ -208,6 +238,148 @@
     );
   }
 
+  /* ========================================================
+     TRAFFIC CHART
+     ======================================================== */
+
+  function renderChart(data) {
+    const root = $("trafficDetailChart");
+    if (!root) return;
+
+    const rows =
+      Array.isArray(data.traffic_daily)
+        ? data.traffic_daily
+        : [];
+
+    if (!rows.length) {
+      root.innerHTML =
+        '<div style="display:grid;place-items:center;height:100%;color:#71809a">No traffic observations in this period.</div>';
+      return;
+    }
+
+    const values =
+      rows.map(row =>
+        Number(
+          row.visitors ??
+          row.human_visitors ??
+          0
+        )
+      );
+
+    const max =
+      Math.max(...values, 1);
+
+    const width = 1000;
+    const height = 260;
+    const left = 48;
+    const right = 22;
+    const top = 24;
+    const bottom = 42;
+
+    const usableW =
+      width - left - right;
+
+    const usableH =
+      height - top - bottom;
+
+    const points =
+      values.map((value, index) => {
+        const x =
+          left +
+          (
+            rows.length === 1
+              ? usableW / 2
+              : (index / (rows.length - 1)) * usableW
+          );
+
+        const y =
+          top +
+          usableH -
+          (value / max) * usableH;
+
+        return { x, y, value };
+      });
+
+    const polyline =
+      points
+        .map(p => `${p.x},${p.y}`)
+        .join(" ");
+
+    const labels =
+      rows.map((row, index) => {
+        const x =
+          left +
+          (
+            rows.length === 1
+              ? usableW / 2
+              : (index / (rows.length - 1)) * usableW
+          );
+
+        const raw =
+          row.date ||
+          row.day ||
+          row.metric_date ||
+          "";
+
+        const label =
+          String(raw).slice(5);
+
+        return `
+          <text
+            x="${x}"
+            y="${height - 12}"
+            text-anchor="middle"
+            font-size="10"
+            fill="#7a8698"
+          >${safe(label)}</text>
+        `;
+      }).join("");
+
+    const dots =
+      points.map(p => `
+        <circle
+          cx="${p.x}"
+          cy="${p.y}"
+          r="4"
+          fill="#2d75f0"
+        >
+          <title>${num(p.value)} visitors</title>
+        </circle>
+      `).join("");
+
+    root.innerHTML = `
+      <svg
+        viewBox="0 0 ${width} ${height}"
+        preserveAspectRatio="none"
+        style="width:100%;height:100%;display:block"
+        aria-label="Human visitors over time"
+      >
+        <line
+          x1="${left}"
+          y1="${top + usableH}"
+          x2="${width - right}"
+          y2="${top + usableH}"
+          stroke="#e6ebf2"
+        />
+
+        <polyline
+          points="${polyline}"
+          fill="none"
+          stroke="#2d75f0"
+          stroke-width="3"
+          vector-effect="non-scaling-stroke"
+        />
+
+        ${dots}
+        ${labels}
+      </svg>
+    `;
+  }
+
+  /* ========================================================
+     ACQUISITION
+     ======================================================== */
+
   function renderSources(data) {
     const body =
       $("trafficSourcesBody");
@@ -235,7 +407,7 @@
 
         return `
           <tr>
-            <td><b>${safe(row.source_name || "Unknown")}</b></td>
+            <td><b>${safe(row.source_name || row.source || "Unknown")}</b></td>
             <td>${safe(channelLabel(row))}</td>
             <td>${num(visitors)}</td>
             <td>${num(row.sessions)}</td>
@@ -257,54 +429,56 @@
         ? data.top_sources
         : [];
 
-    const groups = new Map();
-
-    rows.forEach(row => {
-      const label =
-        channelLabel(row);
-
-      groups.set(
-        label,
-        (groups.get(label) || 0) +
-        Number(row.visitors || 0)
-      );
-    });
-
-    const result =
-      [...groups.entries()]
-        .sort((a, b) => b[1] - a[1]);
-
-    const total =
-      result.reduce(
-        (sum, row) => sum + row[1],
-        0
-      );
-
-    if (!result.length || total <= 0) {
-      root.innerHTML =
-        '<div style="color:var(--muted);font-size:12px">No attributed channel activity in this period.</div>';
+    if (!rows.length) {
+      root.textContent =
+        "No attributed channel activity in this period.";
       return;
     }
 
-    root.innerHTML =
-      result.map(([label, visitors]) => {
-        const share =
-          (visitors / total) * 100;
+    const groups =
+      new Map();
 
-        return `
-          <div class="bar-row">
-            <span>${safe(label)}</span>
-            <div class="bar">
-              <i style="width:${Math.max(
-                1,
-                Math.min(100, share)
-              )}%"></i>
+    rows.forEach(row => {
+      const channel =
+        channelLabel(row);
+
+      const visitors =
+        Number(row.visitors || 0);
+
+      groups.set(
+        channel,
+        (groups.get(channel) || 0) + visitors
+      );
+    });
+
+    const total =
+      [...groups.values()]
+        .reduce((sum, value) => sum + value, 0);
+
+    root.innerHTML =
+      [...groups.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([channel, visitors]) => {
+          const share =
+            total > 0
+              ? (visitors / total) * 100
+              : 0;
+
+          return `
+            <div class="bar-row">
+              <span>${safe(channel)}</span>
+              <div class="bar">
+                <i style="width:${Math.min(100, share).toFixed(1)}%"></i>
+              </div>
+              <b>${share.toFixed(1)}%</b>
             </div>
-            <b>${share.toFixed(1)}%</b>
-          </div>
-        `;
-      }).join("");
+          `;
+        }).join("");
   }
+
+  /* ========================================================
+     LLM REFERRALS
+     ======================================================== */
 
   function renderLlm(data) {
     const body =
@@ -331,16 +505,11 @@
         const leads =
           Number(row.leads || 0);
 
-        const sessions =
-          row.sessions == null
-            ? "—"
-            : num(row.sessions);
-
         return `
           <tr>
-            <td><b>${safe(row.source_name || "Unknown")}</b></td>
+            <td><b>${safe(row.source_name || row.source || "Unknown")}</b></td>
             <td>${num(visitors)}</td>
-            <td>${sessions}</td>
+            <td>${num(row.sessions)}</td>
             <td>${num(leads)}</td>
             <td>${pct(conversion(leads, visitors))}</td>
             <td>—</td>
@@ -348,6 +517,10 @@
         `;
       }).join("");
   }
+
+  /* ========================================================
+     LANGUAGES
+     ======================================================== */
 
   function renderLanguages(data) {
     const body =
@@ -366,36 +539,8 @@
       return;
     }
 
-    const order = [
-      "en", "ru", "hi", "zh",
-      "es", "fr", "de", "ar"
-    ];
-
-    const sorted =
-      [...rows].sort((a, b) => {
-        const aa =
-          order.indexOf(
-            String(a.language_code || "").toLowerCase()
-          );
-
-        const bb =
-          order.indexOf(
-            String(b.language_code || "").toLowerCase()
-          );
-
-        return (
-          (aa === -1 ? 999 : aa) -
-          (bb === -1 ? 999 : bb)
-        );
-      });
-
     body.innerHTML =
-      sorted.map(row => {
-        const code =
-          String(
-            row.language_code || ""
-          ).toLowerCase();
-
+      rows.map(row => {
         const visitors =
           Number(row.visitors || 0);
 
@@ -404,34 +549,45 @@
 
         return `
           <tr>
-            <td>
-              <b>${safe(code.toUpperCase())}</b>
-              — ${safe(
-                LANGUAGE_NAMES[code] ||
-                code.toUpperCase()
-              )}
-            </td>
+            <td><b>${safe(
+              row.language_code ||
+              row.language ||
+              "—"
+            ).toUpperCase()}</b></td>
 
             <td>${num(visitors)}</td>
             <td>${num(row.sessions)}</td>
             <td>${num(row.pageviews)}</td>
-            <td>${num(row.engaged_pageviews)}</td>
+            <td>${num(
+              row.engaged_pageviews ??
+              row.engaged ??
+              0
+            )}</td>
             <td>${num(leads)}</td>
             <td>${pct(conversion(leads, visitors))}</td>
-            <td>${num(row.search_clicks)}</td>
-            <td>${num(row.ai_requests)}</td>
+            <td>${num(
+              row.search_clicks ??
+              row.google_clicks ??
+              0
+            )}</td>
+            <td>${num(
+              row.ai_requests ??
+              row.ai_bot_requests ??
+              0
+            )}</td>
             <td>—</td>
           </tr>
         `;
       }).join("");
   }
 
+  /* ========================================================
+     COUNTRIES
+     ======================================================== */
+
   function renderCountries(data) {
     const body =
       $("trafficCountriesBody");
-
-    const note =
-      $("trafficGeoCoverage");
 
     if (!body) return;
 
@@ -444,33 +600,35 @@
       body.innerHTML =
         '<tr><td colspan="4">Country dimension is collecting. No known geo observations in this period.</td></tr>';
 
-      if (note) {
-        note.textContent =
-          "Historical sessions created before geo collection remain unknown and are not backfilled.";
-      }
+      setText(
+        "trafficGeoCoverage",
+        "Historical sessions created before geo collection remain unknown and are not backfilled."
+      );
 
       return;
     }
 
     body.innerHTML =
       rows.map(row => {
-        const code =
-          String(
-            row.country_code || ""
-          ).toUpperCase();
+        const share =
+          Number(
+            row.share_of_known_geo_pct ??
+            row.share_pct ??
+            row.share ??
+            0
+          );
 
         return `
           <tr>
-            <td>
-              <span style="margin-right:7px">${countryFlag(code)}</span>
-              <b>${safe(countryName(code))}</b>
-            </td>
-
+            <td><b>${safe(
+              row.country_name ||
+              row.country_code ||
+              row.country ||
+              "Unknown"
+            )}</b></td>
             <td>${num(row.visitors)}</td>
             <td>${num(row.sessions)}</td>
-            <td>${Number(
-              row.share_of_known_geo_pct || 0
-            ).toFixed(1)}%</td>
+            <td>${share.toFixed(2)}%</td>
           </tr>
         `;
       }).join("");
@@ -478,519 +636,306 @@
     const first =
       rows[0] || {};
 
-    if (note) {
-      note.textContent =
-        `Geo coverage: ${Number(
-          first.geo_coverage_pct || 0
-        ).toFixed(2)}% · ${num(
-          first.geo_known_visitors
-        )} known of ${num(
-          first.all_visitors
-        )} visitors · country shares are calculated only across known geo.`;
-    }
-  }
+    const coverage =
+      first.geo_coverage_pct ??
+      data.geo_coverage_pct;
 
-  function renderChart(data) {
-    const root =
-      $("trafficDetailChart");
+    const known =
+      first.geo_known_visitors ??
+      data.geo_known_visitors;
 
-    if (!root) return;
+    const all =
+      first.all_visitors ??
+      data.all_visitors;
 
-    const rows =
-      Array.isArray(data.traffic_daily)
-        ? data.traffic_daily
-        : [];
-
-    if (!rows.length) {
-      root.innerHTML =
-        '<div style="padding:70px 10px;text-align:center;color:var(--muted)">No traffic observations in this period.</div>';
-      return;
-    }
-
-    const W = 1000;
-    const H = 300;
-
-    const left = 48;
-    const right = 970;
-    const top = 24;
-    const bottom = 245;
-
-    const values =
-      rows.map(row =>
-        Number(row.visitors || 0)
+    if (
+      coverage !== undefined &&
+      coverage !== null
+    ) {
+      setText(
+        "trafficGeoCoverage",
+        `Geo coverage: ${Number(coverage).toFixed(2)}%${
+          known !== undefined && all !== undefined
+            ? ` · ${num(known)} known of ${num(all)} visitors`
+            : ""
+        } · shares are based on known geo only.`
       );
-
-    const max =
-      Math.max(1, ...values);
-
-    const x = index =>
-      rows.length === 1
-        ? (left + right) / 2
-        : left +
-          (index / (rows.length - 1)) *
-          (right - left);
-
-    const y = value =>
-      bottom -
-      (Number(value || 0) / max) *
-      (bottom - top);
-
-    const points =
-      rows.map(
-        (row, i) =>
-          `${x(i)},${y(row.visitors)}`
-      ).join(" ");
-
-    const grid =
-      [0, .25, .5, .75, 1]
-        .map(ratio => {
-          const yy =
-            bottom -
-            ratio * (bottom - top);
-
-          const label =
-            Math.round(max * ratio);
-
-          return `
-            <line
-              x1="${left}"
-              y1="${yy}"
-              x2="${right}"
-              y2="${yy}"
-              stroke="currentColor"
-              opacity=".08"
-            />
-            <text
-              x="4"
-              y="${yy + 4}"
-              font-size="11"
-              fill="currentColor"
-              opacity=".55"
-            >${num(label)}</text>
-          `;
-        }).join("");
-
-    const labels =
-      rows.map((row, i) => {
-        if (
-          rows.length > 12 &&
-          i !== 0 &&
-          i !== rows.length - 1 &&
-          i % Math.ceil(rows.length / 6) !== 0
-        ) {
-          return "";
-        }
-
-        const date =
-          String(
-            row.date ||
-            row.day ||
-            row.metric_date ||
-            ""
-          );
-
-        return `
-          <text
-            x="${x(i)}"
-            y="278"
-            text-anchor="middle"
-            font-size="10"
-            fill="currentColor"
-            opacity=".55"
-          >${safe(date.slice(5))}</text>
-        `;
-      }).join("");
-
-    root.innerHTML = `
-      <div style="
-        display:flex;
-        gap:18px;
-        align-items:center;
-        margin:0 0 10px 48px;
-        font-size:11px;
-        color:var(--muted)
-      ">
-        <span><b style="color:var(--text)">Human Visitors</b> · daily observations</span>
-      </div>
-
-      <svg
-        viewBox="0 0 ${W} ${H}"
-        width="100%"
-        role="img"
-        aria-label="Human visitors over time"
-        style="overflow:visible;color:var(--text)"
-      >
-        ${grid}
-
-        <polyline
-          points="${points}"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="3"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-
-        ${rows.map(
-          (row, i) => `
-            <circle
-              cx="${x(i)}"
-              cy="${y(row.visitors)}"
-              r="4"
-              fill="currentColor"
-            >
-              <title>${safe(
-                row.date ||
-                row.day ||
-                row.metric_date ||
-                ""
-              )}: ${num(row.visitors)} visitors</title>
-            </circle>
-          `
-        ).join("")}
-
-        ${labels}
-      </svg>
-    `;
+    } else {
+      setText(
+        "trafficGeoCoverage",
+        "Shares are based on visitors with known geo only."
+      );
+    }
   }
 
-  function renderAll(data, requestedPeriod) {
-    renderKpis(trafficData);
-    renderChart(trafficData);
-    renderSources(trafficData);
-    renderChannelMix(trafficData);
-    renderLlm(trafficData);
-    renderLanguages(trafficData);
-    renderCountries(trafficData);
+  /* ========================================================
+     MASTER RENDER
+     ======================================================== */
+
+  function renderAll(data, range) {
+    renderKpis(data);
+    renderChart(data);
+    renderSources(data);
+    renderChannelMix(data);
+    renderLlm(data);
+    renderLanguages(data);
+    renderCountries(data);
 
     setText(
       "trafficRangeLabel",
-      periodLabel(trafficRange,
-        requestedPeriod.toUpperCase()
-      )
+      rangeLabel(range)
     );
   }
 
-  function setLoading() {
-    [
-      "trafficVisitors",
-      "trafficSessions",
-      "trafficPageviews",
-      "trafficEngagedSessions",
-      "trafficLeads",
-      "trafficConversion"
-    ].forEach(id =>
-      setText(id, "…")
-    );
-  }
+  /* ========================================================
+     API
+     ======================================================== */
 
-  function setError(message) {
-    console.error(
-      "[Traffic & Analytics]",
-      message
-    );
-
-    const chart =
-      $("trafficDetailChart");
-
-    if (chart) {
-      chart.innerHTML =
-        `<div style="padding:70px 10px;text-align:center;color:var(--muted)">
-          Traffic data could not be loaded.
-        </div>`;
-    }
-  }
+  let requestId = 0;
 
   async function loadTraffic(
     period = "7d",
-    from = null,
-    to = null
+    customFrom = null,
+    customTo = null
   ) {
+    const thisRequest =
+      ++requestId;
+
     setLoading();
 
-    const url = new URL(API);
-
-    // Worker contract uses "today", "7d", "30d", "90d", "custom"
-    url.searchParams.set("period", period);
-
-    if (period === "custom" && from && to) {
-      url.searchParams.set("from", from);
-      url.searchParams.set("to", to);
-    }
-
     try {
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        mode: "cors",
-        credentials: "omit",
-        cache: "no-store",
-        headers: {
-          "Accept": "application/json"
+      const params =
+        new URLSearchParams();
+
+      params.set(
+        "period",
+        period
+      );
+
+      if (period === "custom") {
+        if (!customFrom || !customTo) {
+          throw new Error(
+            "Custom range requires From and To dates"
+          );
         }
-      });
+
+        params.set(
+          "from",
+          customFrom
+        );
+
+        params.set(
+          "to",
+          customTo
+        );
+      }
+
+      const response =
+        await fetch(
+          `${API}?${params.toString()}`,
+          {
+            method: "GET",
+            mode: "cors",
+            credentials: "omit",
+            headers: {
+              Accept: "application/json"
+            }
+          }
+        );
 
       if (!response.ok) {
-        throw new Error(`Overview API HTTP ${response.status}`);
+        throw new Error(
+          `Overview HTTP ${response.status}`
+        );
       }
 
-      const envelope = await response.json();
+      const payload =
+        await response.json();
 
-      if (!envelope || envelope.ok !== true) {
-        throw new Error("Overview API returned ok != true");
+      if (
+        !payload ||
+        payload.ok !== true ||
+        !payload.data
+      ) {
+        throw new Error(
+          "Invalid overview payload"
+        );
       }
 
-      if (!envelope.data || typeof envelope.data !== "object") {
-        throw new Error("Overview API response.data is missing");
+      if (
+        thisRequest !==
+        requestId
+      ) {
+        return;
       }
 
-      const data = envelope.data;
-
-      // range is top-level in the production API,
-      // while all analytics datasets live inside response.data.
-      data.range = envelope.range || null;
-
-      renderAll(data, period);
+      renderAll(
+        payload.data,
+        payload.range
+      );
 
       console.info(
-        "[Traffic & Analytics] loaded",
-        {
-          period,
-          range: envelope.range,
-          kpis: data.kpis,
-          sources: Array.isArray(data.top_sources)
-            ? data.top_sources.length
-            : 0,
-          languages: Array.isArray(data.languages)
-            ? data.languages.length
-            : 0,
-          countries: Array.isArray(data.countries)
-            ? data.countries.length
-            : 0,
-          traffic_daily: Array.isArray(data.traffic_daily)
-            ? data.traffic_daily.length
-            : 0
-        }
+        "[Traffic & Analytics] live",
+        payload.range,
+        payload.data.kpis
       );
 
     } catch (error) {
-      console.error(
-        "[Traffic & Analytics] load failed:",
-        error
-      );
-
-      setError(error);
+      if (
+        thisRequest ===
+        requestId
+      ) {
+        setError(error);
+      }
     }
+  }
+
+  /* ========================================================
+     PERIOD CONTROL
+     ======================================================== */
+
+  const validPeriods =
+    new Set([
+      "today",
+      "7d",
+      "30d",
+      "90d",
+      "custom"
+    ]);
+
+  let currentPeriod =
+    localStorage.getItem(
+      "primadom-intelligence-detail-period"
+    ) || "7d";
+
+  currentPeriod =
+    String(currentPeriod).toLowerCase();
+
+  if (!validPeriods.has(currentPeriod)) {
+    currentPeriod = "7d";
   }
 
   function activateButton(period) {
     document
       .querySelectorAll(
-        "[data-traffic-period]"
+        "#traffic [data-traffic-period]"
       )
       .forEach(button => {
         button.classList.toggle(
           "active",
-          button.dataset.trafficPeriod === period
+          String(
+            button.dataset.trafficPeriod
+          ).toLowerCase() === period
         );
       });
   }
 
-  function saveState(state) {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(state)
-      );
-    } catch (_) {}
-  }
-
-  function readState() {
-    try {
-      const value =
-        JSON.parse(
-          localStorage.getItem(
-            STORAGE_KEY
-          ) || "{}"
-        );
-
-      if (
-        ["today", "7d", "30d", "90d", "custom"]
-          .includes(value.period)
-      ) {
-        return value;
-      }
-    } catch (_) {}
-
-    return {
-      period: "7d",
-      from: null,
-      to: null
-    };
-  }
-
-  function init() {
-    if (!$("traffic")) return;
-
-    const customBox =
+  function showCustom(show) {
+    const root =
       $("trafficCustomRange");
 
-    const fromInput =
-      $("trafficFrom");
-
-    const toInput =
-      $("trafficTo");
-
-    const apply =
-      $("trafficApplyCustom");
-
-    let state =
-      readState();
-
-    if (
-      state.period === "custom" &&
-      (!state.from || !state.to)
-    ) {
-      state = {
-        period: "7d",
-        from: null,
-        to: null
-      };
+    if (root) {
+      root.style.display =
+        show ? "" : "none";
     }
+  }
 
-    activateButton(
-      state.period
-    );
-
-    if (
-      state.period === "custom" &&
-      customBox
-    ) {
-      customBox.style.display =
-        "flex";
-
-      if (fromInput) {
-        fromInput.value =
-          state.from || "";
-      }
-
-      if (toInput) {
-        toInput.value =
-          state.to || "";
-      }
-    }
-
-    document
-      .querySelectorAll(
-        "[data-traffic-period]"
-      )
-      .forEach(button => {
-        button.addEventListener(
-          "click",
-          () => {
-            const period =
-              button.dataset.trafficPeriod;
-
-            activateButton(period);
-
-            if (period === "custom") {
-              if (customBox) {
-                customBox.style.display =
-                  "flex";
-              }
-
-              return;
-            }
-
-            if (customBox) {
-              customBox.style.display =
-                "none";
-            }
-
-            state = {
-              period,
-              from: null,
-              to: null
-            };
-
-            saveState(state);
-
-            loadTraffic(period);
-          }
-        );
-      });
-
-    if (apply) {
-      apply.addEventListener(
+  document
+    .querySelectorAll(
+      "#traffic [data-traffic-period]"
+    )
+    .forEach(button => {
+      button.addEventListener(
         "click",
         () => {
-          const from =
-            fromInput?.value || "";
+          const period =
+            String(
+              button.dataset.trafficPeriod
+            ).toLowerCase();
 
-          const to =
-            toInput?.value || "";
-
-          if (!from || !to) {
-            alert(
-              "Select both From and To dates."
-            );
+          if (
+            !validPeriods.has(period)
+          ) {
             return;
           }
 
-          if (from > to) {
-            alert(
-              "From date cannot be after To date."
-            );
+          activateButton(period);
+
+          if (period === "custom") {
+            showCustom(true);
             return;
           }
 
-          state = {
-            period: "custom",
-            from,
-            to
-          };
+          showCustom(false);
 
-          saveState(state);
-          activateButton("custom");
+          currentPeriod =
+            period;
 
-          loadTraffic(
-            "custom",
-            from,
-            to
+          localStorage.setItem(
+            "primadom-intelligence-detail-period",
+            period
           );
+
+          loadTraffic(period);
         }
       );
-    }
+    });
 
-    loadTraffic(
-      state.period,
-      state.from,
-      state.to
-    );
-  }
+  const applyCustom =
+    $("trafficApplyCustom");
 
-  if (
-    document.readyState === "loading"
-  ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      init,
-      { once: true }
-    );
-  } else {
-    init();
-  }
+  if (applyCustom) {
+    applyCustom.addEventListener(
+      "click",
+      () => {
+        const from =
+          $("trafficFrom")?.value;
 
-  // Traffic detail uses the exact Dashboard period component styling.
-  function syncTrafficPeriodUI(value) {
-    document
-      .querySelectorAll("#traffic .period [data-traffic-period]")
-      .forEach(button => {
-        button.classList.toggle(
-          "active",
-          String(button.dataset.trafficPeriod || "").toLowerCase() ===
-          String(value || "").toLowerCase()
+        const to =
+          $("trafficTo")?.value;
+
+        if (!from || !to) {
+          return;
+        }
+
+        currentPeriod =
+          "custom";
+
+        localStorage.setItem(
+          "primadom-intelligence-detail-period",
+          "custom"
         );
-      });
+
+        activateButton("custom");
+
+        loadTraffic(
+          "custom",
+          from,
+          to
+        );
+      }
+    );
   }
+
+  /* ========================================================
+     INITIAL LOAD
+     ======================================================== */
+
+  activateButton(currentPeriod);
+
+  if (currentPeriod === "custom") {
+    currentPeriod = "7d";
+
+    localStorage.setItem(
+      "primadom-intelligence-detail-period",
+      "7d"
+    );
+
+    activateButton("7d");
+  }
+
+  showCustom(false);
+
+  loadTraffic(currentPeriod);
 
 })();
