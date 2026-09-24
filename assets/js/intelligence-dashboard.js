@@ -2735,11 +2735,11 @@
               display:inline-flex;
               align-items:center;
               justify-content:center;
-              min-height:24px;
-              padding:3px 10px;
+              min-height:20px;
+              padding:2px 8px;
               border-radius:999px;
               white-space:nowrap;
-              font-size:12px;
+              font-size:11px;
               font-weight:500;
               line-height:1;
               background:${meta.bg};
