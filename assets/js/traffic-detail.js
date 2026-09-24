@@ -1137,41 +1137,51 @@
      INITIAL LOAD
      ======================================================== */
 
-  activateButton(currentPeriod);
+  function initialTrafficLoad() {
+    activateButton(currentPeriod);
 
-  if (currentPeriod === "custom") {
-    const savedFrom = localStorage.getItem(
-      "primadom-intelligence-detail-custom-from"
-    );
-    const savedTo = localStorage.getItem(
-      "primadom-intelligence-detail-custom-to"
-    );
+    if (currentPeriod === "custom") {
+      const savedFrom = localStorage.getItem(
+        "primadom-intelligence-detail-custom-from"
+      );
 
-    if (savedFrom && savedTo) {
-      const fromInput = $("trafficFrom");
-      const toInput = $("trafficTo");
+      const savedTo = localStorage.getItem(
+        "primadom-intelligence-detail-custom-to"
+      );
 
-      if (fromInput) fromInput.value = savedFrom;
-      if (toInput) toInput.value = savedTo;
+      if (savedFrom && savedTo) {
+        const fromInput = $("trafficFrom");
+        const toInput = $("trafficTo");
 
-      activateButton("custom");
-      showCustom(true);
-      loadTraffic("custom", savedFrom, savedTo);
-      return;
+        if (fromInput) fromInput.value = savedFrom;
+        if (toInput) toInput.value = savedTo;
+
+        activateButton("custom");
+        showCustom(true);
+
+        loadTraffic(
+          "custom",
+          savedFrom,
+          savedTo
+        );
+
+        return;
+      }
+
+      currentPeriod = "7d";
+
+      localStorage.setItem(
+        "primadom-intelligence-detail-period",
+        "7d"
+      );
+
+      activateButton("7d");
     }
 
-    currentPeriod = "7d";
-
-    localStorage.setItem(
-      "primadom-intelligence-detail-period",
-      "7d"
-    );
-
-    activateButton("7d");
+    showCustom(false);
+    loadTraffic(currentPeriod);
   }
 
-  showCustom(false);
-
-  loadTraffic(currentPeriod);
+  initialTrafficLoad();
 
 })();
