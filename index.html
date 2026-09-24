@@ -546,6 +546,42 @@ background-size:100% 48px, 78px 100%}
 }
 </style>
 
+
+<style id="bot-company-color-style">
+
+#botRegistryBody td:nth-child(1),
+#botRegistryBody td:nth-child(2){
+  white-space:nowrap;
+}
+
+.bot-company-dot{
+  --bot-company-color:#718096;
+
+  display:inline-block;
+
+  width:8px;
+  height:8px;
+
+  margin-right:8px;
+
+  border-radius:999px;
+
+  background:
+    var(--bot-company-color);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--bot-company-color) 12%,
+      transparent
+    );
+
+  vertical-align:1px;
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2094,8 +2130,8 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 })();
 </script>
 
-<script src="/assets/js/ai-bots-detail.js?v=20260924160139"></script>
-<script src="/assets/js/search-detail.js?v=20260924192340"></script>
+<script src="/assets/js/ai-bots-detail.js?v=20260924193234"></script>
+<script src="/assets/js/search-detail.js?v=20260924193234"></script>
 <script src="/assets/js/pages-detail.js?v=20260924183947"></script>
 </body>
 </html>

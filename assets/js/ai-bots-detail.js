@@ -742,3 +742,194 @@
   loadBots(currentPeriod);
 
 })();
+
+
+/* ==========================================================
+   PRIMADOM BOT COMPANY COLOR GROUPING V1
+   Visual grouping only. Row order and data stay untouched.
+   ========================================================== */
+
+(() => {
+  "use strict";
+
+  const BRAND_COLORS = {
+    "openai": "#10a37f",
+    "anthropic": "#d97757",
+    "google": "#4285f4",
+    "microsoft": "#00a4ef",
+    "perplexity": "#20808d",
+    "semrush": "#ff642d",
+    "amazon": "#ff9900",
+    "baidu": "#4e6cef",
+    "common crawl": "#7c63c7",
+    "ahrefs": "#e65f2b"
+  };
+
+
+  function normalizeOperator(
+    value
+  ) {
+    return String(
+      value || ""
+    )
+      .trim()
+      .toLowerCase();
+  }
+
+
+  function getBrandColor(
+    operator
+  ) {
+    return (
+      BRAND_COLORS[
+        normalizeOperator(
+          operator
+        )
+      ] ||
+      "#718096"
+    );
+  }
+
+
+  function addBrandDot(
+    cell,
+    color
+  ) {
+    if (
+      cell.querySelector(
+        ".bot-company-dot"
+      )
+    ) {
+      return;
+    }
+
+    const dot =
+      document.createElement(
+        "span"
+      );
+
+    dot.className =
+      "bot-company-dot";
+
+    dot.style
+      .setProperty(
+        "--bot-company-color",
+        color
+      );
+
+    cell.prepend(
+      dot
+    );
+  }
+
+
+  function decorateCrawlerRegistry() {
+    const body =
+      document.getElementById(
+        "botRegistryBody"
+      );
+
+    if (!body) {
+      return;
+    }
+
+    const rows =
+      body.querySelectorAll(
+        "tr"
+      );
+
+    rows.forEach(
+      row => {
+        const cells =
+          row.querySelectorAll(
+            "td"
+          );
+
+        if (
+          cells.length < 2
+        ) {
+          return;
+        }
+
+        const operator =
+          cells[0]
+            .textContent
+            .trim();
+
+        if (
+          !operator ||
+          operator === "—"
+        ) {
+          return;
+        }
+
+        const color =
+          getBrandColor(
+            operator
+          );
+
+        row.style
+          .setProperty(
+            "--bot-company-color",
+            color
+          );
+
+        addBrandDot(
+          cells[0],
+          color
+        );
+
+        addBrandDot(
+          cells[1],
+          color
+        );
+      }
+    );
+  }
+
+
+  function initBotCompanyGrouping() {
+    const body =
+      document.getElementById(
+        "botRegistryBody"
+      );
+
+    if (!body) {
+      return;
+    }
+
+    decorateCrawlerRegistry();
+
+    const observer =
+      new MutationObserver(
+        decorateCrawlerRegistry
+      );
+
+    observer.observe(
+      body,
+      {
+        childList:
+          true,
+        subtree:
+          true
+      }
+    );
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initBotCompanyGrouping,
+      {
+        once: true
+      }
+    );
+  } else {
+    initBotCompanyGrouping();
+  }
+
+})();

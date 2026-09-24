@@ -699,7 +699,8 @@
       coverageText;
 
     renderTimeline(
-      timeline
+      timeline,
+      range
     );
 
     renderPages();
@@ -840,7 +841,8 @@
   }
 
   function renderTimeline(
-    rawRows
+    rawRows,
+    range
   ) {
     const root =
       $("searchVisibilityChart");
@@ -853,10 +855,16 @@
         )
         .sort(
           (a,b) =>
-            String(a.data_date)
-              .localeCompare(
-                String(b.data_date)
-              )
+            (
+              Date.parse(
+                a.data_date
+              ) || 0
+            ) -
+            (
+              Date.parse(
+                b.data_date
+              ) || 0
+            )
         );
 
     if (!source.length) {
@@ -866,14 +874,173 @@
       return;
     }
 
+
+    let rows = [];
+
+
     /*
-     * Start at the first real GSC observation.
-     * Only fill gaps after collection has actually begun.
+     * TODAY
+     * Keep exact hourly observations.
      */
-    const rows =
-      fillTimeline(
-        source
-      );
+    if (
+      period === "today"
+    ) {
+      rows =
+        source.map(
+          row => ({
+            ...row,
+            has_data:
+              true
+          })
+        );
+
+    } else {
+
+      /*
+       * 7D / 30D / 90D / Custom
+       *
+       * X-axis always spans the SELECTED period.
+       *
+       * Dates before GSC collection began are NULL / no-data,
+       * never fake zeroes.
+       *
+       * Missing dates BETWEEN first and last real observation
+       * are valid zero-search days.
+       */
+      const actualByDate =
+        new Map();
+
+      for (
+        const row of source
+      ) {
+        const key =
+          String(
+            row.data_date
+          ).slice(
+            0,
+            10
+          );
+
+        actualByDate.set(
+          key,
+          row
+        );
+      }
+
+      const firstActual =
+        String(
+          source[0].data_date
+        ).slice(
+          0,
+          10
+        );
+
+      const lastActual =
+        String(
+          source.at(-1).data_date
+        ).slice(
+          0,
+          10
+        );
+
+      const from =
+        range?.from ||
+        firstActual;
+
+      const to =
+        range?.to ||
+        lastActual;
+
+      const fromDate =
+        new Date(
+          `${from}T00:00:00Z`
+        );
+
+      const toDate =
+        new Date(
+          `${to}T00:00:00Z`
+        );
+
+      for (
+        let date =
+          new Date(
+            fromDate
+          );
+
+        date <= toDate;
+
+        date.setUTCDate(
+          date.getUTCDate() + 1
+        )
+      ) {
+        const key =
+          date
+            .toISOString()
+            .slice(
+              0,
+              10
+            );
+
+        const actual =
+          actualByDate.get(
+            key
+          );
+
+        if (actual) {
+          rows.push({
+            ...actual,
+            data_date:
+              key,
+            has_data:
+              true
+          });
+
+          continue;
+        }
+
+        /*
+         * We only convert gaps to 0 AFTER telemetry began
+         * and BEFORE the latest actual observation.
+         */
+        if (
+          key >= firstActual &&
+          key <= lastActual
+        ) {
+          rows.push({
+            data_date:
+              key,
+            impressions:
+              0,
+            clicks:
+              0,
+            ctr:
+              0,
+            position:
+              null,
+            has_data:
+              true
+          });
+
+          continue;
+        }
+
+        rows.push({
+          data_date:
+            key,
+          impressions:
+            null,
+          clicks:
+            null,
+          ctr:
+            null,
+          position:
+            null,
+          has_data:
+            false
+        });
+      }
+    }
+
 
     const width =
       1120;
@@ -882,16 +1049,16 @@
       300;
 
     const left =
-      68;
+      72;
 
     const right =
-      62;
+      66;
 
     const top =
       25;
 
     const bottom =
-      48;
+      50;
 
     const usableW =
       width -
@@ -903,8 +1070,16 @@
       top -
       bottom;
 
+
+    const dataRows =
+      rows.filter(
+        row =>
+          row.has_data
+      );
+
+
     const impressions =
-      rows.map(
+      dataRows.map(
         row =>
           Number(
             row.impressions || 0
@@ -912,12 +1087,13 @@
       );
 
     const clicks =
-      rows.map(
+      dataRows.map(
         row =>
           Number(
             row.clicks || 0
           )
       );
+
 
     const nice =
       value => {
@@ -927,7 +1103,7 @@
             1
           );
 
-        const p =
+        const power =
           Math.pow(
             10,
             Math.floor(
@@ -935,19 +1111,24 @@
             )
           );
 
-        const s =
-          v / p;
+        const scaled =
+          v / power;
+
+        const step =
+          scaled <= 1
+            ? 1
+            : scaled <= 2
+              ? 2
+              : scaled <= 5
+                ? 5
+                : 10;
 
         return (
-          s <= 1
-            ? 1
-            : s <= 2
-              ? 2
-              : s <= 5
-                ? 5
-                : 10
-        ) * p;
+          step *
+          power
+        );
       };
+
 
     const maxI =
       nice(
@@ -965,23 +1146,18 @@
         )
       );
 
+
+    /*
+     * Extra X padding prevents first/last bar
+     * colliding with Y-axis labels.
+     */
     const plotPadding =
-      Math.min(
-        24,
-        Math.max(
-          14,
-          usableW /
-          Math.max(
-            rows.length,
-            1
-          ) /
-          2
-        )
-      );
+      24;
 
     const plotWidth =
       usableW -
       plotPadding * 2;
+
 
     const x =
       index =>
@@ -998,29 +1174,38 @@
               plotWidth
         );
 
+
     const yI =
       value =>
         top +
         usableH -
         (
-          Number(value || 0) /
+          Number(
+            value || 0
+          ) /
           maxI *
           usableH
         );
+
 
     const yC =
       value =>
         top +
         usableH -
         (
-          Number(value || 0) /
+          Number(
+            value || 0
+          ) /
           maxC *
           usableH
         );
 
+
     const grid =
       Array.from(
-        { length:5 },
+        {
+          length: 5
+        },
         (_,index) => {
           const ratio =
             index / 4;
@@ -1031,30 +1216,58 @@
             ratio;
 
           return `
-            <line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" stroke="#e8edf4"/>
-            <text x="${left-10}" y="${y+4}" text-anchor="end" font-size="10" fill="#7a8698">${num(Math.round(maxI*(1-ratio)))}</text>
-            <text x="${width-right+10}" y="${y+4}" font-size="10" fill="#7a8698">${num(Math.round(maxC*(1-ratio)))}</text>
+            <line
+              x1="${left}"
+              y1="${y}"
+              x2="${width-right}"
+              y2="${y}"
+              stroke="#e8edf4"
+            />
+
+            <text
+              x="${left-12}"
+              y="${y+4}"
+              text-anchor="end"
+              font-size="10"
+              fill="#7a8698"
+            >${num(Math.round(maxI*(1-ratio)))}</text>
+
+            <text
+              x="${width-right+12}"
+              y="${y+4}"
+              font-size="10"
+              fill="#7a8698"
+            >${num(Math.round(maxC*(1-ratio)))}</text>
           `;
         }
       ).join("");
 
+
     const barWidth =
       Math.max(
-        5,
+        4,
         Math.min(
           42,
-          usableW /
+          plotWidth /
           Math.max(
             rows.length,
             1
           ) *
-          0.55
+          0.58
         )
       );
+
 
     const bars =
       rows.map(
         (row,index) => {
+
+          if (
+            !row.has_data
+          ) {
+            return "";
+          }
+
           const value =
             Number(
               row.impressions || 0
@@ -1080,23 +1293,45 @@
         }
       ).join("");
 
+
+    /*
+     * Click line begins only when actual GSC history exists.
+     * No line through the pre-collection no-data zone.
+     */
     const points =
-      rows.map(
-        (row,index) => ({
-          x:
-            x(index),
-          y:
-            yC(
-              row.clicks
-            ),
-          clicks:
-            Number(
-              row.clicks || 0
-            ),
-          date:
-            row.data_date
-        })
-      );
+      rows
+        .map(
+          (row,index) => ({
+            row,
+            index
+          })
+        )
+        .filter(
+          item =>
+            item.row.has_data
+        )
+        .map(
+          item => ({
+            x:
+              x(
+                item.index
+              ),
+
+            y:
+              yC(
+                item.row.clicks
+              ),
+
+            clicks:
+              Number(
+                item.row.clicks || 0
+              ),
+
+            date:
+              item.row.data_date
+          })
+        );
+
 
     const line =
       points
@@ -1106,18 +1341,24 @@
         )
         .join(" ");
 
+
     const dots =
       points.map(
         point => `
-          <circle cx="${point.x}" cy="${point.y}" r="4" fill="#16a36a">
+          <circle
+            cx="${point.x}"
+            cy="${point.y}"
+            r="4"
+            fill="#16a36a"
+          >
             <title>${safe(tooltipDate(point.date))} · ${num(point.clicks)} clicks</title>
           </circle>
         `
       ).join("");
 
+
     /*
-     * 7D = every date.
-     * Longer periods = max roughly 9–10 readable labels.
+     * Make each selected period visually distinct.
      */
     const desiredLabels =
       period === "today"
@@ -1130,22 +1371,33 @@
               ? 9
               : 9;
 
+
     const tickStep =
       Math.max(
         1,
         Math.ceil(
-          rows.length /
-          desiredLabels
+          (
+            rows.length -
+            1
+          ) /
+          (
+            desiredLabels -
+            1
+          )
         )
       );
+
 
     const labels =
       rows.map(
         (row,index) => {
           const show =
             index === 0 ||
-            index === rows.length - 1 ||
-            index % tickStep === 0;
+            index ===
+              rows.length - 1 ||
+            index %
+              tickStep ===
+              0;
 
           if (!show) {
             return "";
@@ -1163,35 +1415,108 @@
         }
       ).join("");
 
+
+    /*
+     * Optional visual marker where actual GSC history starts.
+     * Especially useful on 30D / 90D.
+     */
+    let historyStartMarker =
+      "";
+
+    if (
+      period !== "today"
+    ) {
+      const firstRealIndex =
+        rows.findIndex(
+          row =>
+            row.has_data
+        );
+
+      if (
+        firstRealIndex > 0
+      ) {
+        const markerX =
+          x(
+            firstRealIndex
+          );
+
+        historyStartMarker = `
+          <line
+            x1="${markerX}"
+            y1="${top}"
+            x2="${markerX}"
+            y2="${top+usableH}"
+            stroke="#c8d1de"
+            stroke-width="1"
+            stroke-dasharray="4 5"
+          />
+
+          <text
+            x="${markerX+7}"
+            y="${top+13}"
+            font-size="9"
+            fill="#8a96a8"
+          >GSC history starts ${safe(axisDate(rows[firstRealIndex].data_date))}</text>
+        `;
+      }
+    }
+
+
     root.innerHTML = `
-      <div style="display:flex;gap:18px;margin:0 8px 8px;font-size:12px;color:#65758c">
+      <div
+        style="
+          display:flex;
+          gap:18px;
+          margin:0 8px 8px;
+          font-size:12px;
+          color:#65758c
+        "
+      >
         <span>▰ Impressions</span>
-        <span style="color:#16a36a">● Clicks</span>
-        <span style="margin-left:auto">Left axis: impressions · Right axis: clicks</span>
+
+        <span style="color:#16a36a">
+          ● Clicks
+        </span>
+
+        <span style="margin-left:auto">
+          Left axis: impressions · Right axis: clicks
+        </span>
       </div>
 
       <svg
         viewBox="0 0 ${width} ${height}"
         preserveAspectRatio="none"
-        style="width:100%;height:290px;display:block"
+        style="
+          width:100%;
+          height:290px;
+          display:block
+        "
       >
         ${grid}
+        ${historyStartMarker}
         ${bars}
 
-        <polyline
-          points="${line}"
-          fill="none"
-          stroke="#16a36a"
-          stroke-width="2.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+        ${
+          points.length
+            ? `
+              <polyline
+                points="${line}"
+                fill="none"
+                stroke="#16a36a"
+                stroke-width="2.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            `
+            : ""
+        }
 
         ${dots}
         ${labels}
       </svg>
     `;
   }
+
 
   function renderLanguages(
     data,
