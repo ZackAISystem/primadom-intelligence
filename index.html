@@ -1442,10 +1442,22 @@ background-size:100% 48px, 78px 100%}
        style="display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-top:16px">
 
     <div class="big-table">
-      <h3>Top Search Pages</h3>
-      <p style="margin:4px 0 10px;color:#77859a;font-size:11px">
-        Google Search visibility · separate from Dashboard Top Pages
-      </p>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">
+        <div>
+          <h3>Top Search Pages</h3>
+          <p style="margin:4px 0 0;color:#77859a;font-size:11px">
+            Google Search visibility · separate from Dashboard Top Pages
+          </p>
+        </div>
+
+        <select id="searchPagesSort"
+                style="padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px;background:#fff;color:#24364f;font-size:11px">
+          <option value="clicks">Clicks ↓</option>
+          <option value="impressions">Impressions ↓</option>
+          <option value="ctr">CTR ↓</option>
+          <option value="position">Avg Search Position ↑</option>
+        </select>
+      </div>
 
       <div style="overflow:auto">
         <table>
@@ -1457,7 +1469,7 @@ background-size:100% 48px, 78px 100%}
               <th>Impressions</th>
               <th>Clicks</th>
               <th>CTR</th>
-              <th>Avg Position</th>
+              <th>Avg Search Position</th>
             </tr>
           </thead>
 
@@ -1469,7 +1481,17 @@ background-size:100% 48px, 78px 100%}
     </div>
 
     <div class="big-table">
-      <h3>Top Search Queries</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+        <h3>Top Search Queries</h3>
+
+        <select id="searchQueriesSort"
+                style="padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px;background:#fff;color:#24364f;font-size:11px">
+          <option value="clicks">Clicks ↓</option>
+          <option value="impressions">Impressions ↓</option>
+          <option value="ctr">CTR ↓</option>
+          <option value="position">Avg Search Position ↑</option>
+        </select>
+      </div>
 
       <div style="overflow:auto">
         <table>
@@ -1479,7 +1501,7 @@ background-size:100% 48px, 78px 100%}
               <th>Impressions</th>
               <th>Clicks</th>
               <th>CTR</th>
-              <th>Avg Position</th>
+              <th>Avg Search Position</th>
             </tr>
           </thead>
 
