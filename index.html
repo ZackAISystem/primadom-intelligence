@@ -839,51 +839,219 @@ background-size:100% 48px, 78px 100%}
   
 </section>
 
+
 <section class="screen" id="traffic">
-  <div class="detail-header"><div><h2>Traffic & Analytics</h2><p>Canonical human traffic and acquisition intelligence.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
-  <div class="detail-grid">
-    <div class="detail-card">Human Visitors<b>1,284</b><small class="up">↑ 18.7%</small></div>
-    <div class="detail-card">Sessions<b>1,674</b><small>1.30 sessions / visitor</small></div>
-    <div class="detail-card">Pageviews<b>3,941</b><small>2.35 / session</small></div>
-    <div class="detail-card">Engagement Rate<b>63.4%</b><small class="up">↑ 4.2 pp</small></div>
-  </div>
-  <div class="detail-2">
-    <div class="big-table"><h3>Acquisition Sources</h3><table><tr><th>Source</th><th>Channel</th><th>Visitors</th><th>Sessions</th><th>Leads</th></tr><tr><td>ChatGPT</td><td>LLM referral</td><td>2,847</td><td>3,104</td><td>6</td></tr><tr><td>Google Organic</td><td>Search</td><td>2,341</td><td>2,785</td><td>5</td></tr><tr><td>Direct</td><td>Direct</td><td>1,903</td><td>2,188</td><td>2</td></tr><tr><td>Perplexity</td><td>LLM referral</td><td>876</td><td>921</td><td>4</td></tr></table></div>
-    <div class="big-table"><h3>Channel Mix</h3><div class="bar-row"><span>LLM Referral</span><div class="bar"><i style="width:72%"></i></div><b>32%</b></div><div class="bar-row"><span>Organic Search</span><div class="bar"><i style="width:62%;background:#14a36a"></i></div><b>28%</b></div><div class="bar-row"><span>Direct</span><div class="bar"><i style="width:44%;background:#c5a15b"></i></div><b>20%</b></div><div class="bar-row"><span>Referral / Other</span><div class="bar"><i style="width:32%;background:#7b5be7"></i></div><b>20%</b></div></div>
+
+  <div class="detail-header">
+    <div>
+      <h2>Traffic & Analytics</h2>
+      <p>Canonical human traffic, acquisition and audience intelligence.</p>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div class="period-switch traffic-period-switch">
+        <button data-traffic-period="1d">1D</button>
+        <button data-traffic-period="7d" class="active">7D</button>
+        <button data-traffic-period="30d">30D</button>
+        <button data-traffic-period="90d">90D</button>
+        <button data-traffic-period="custom">Custom</button>
+      </div>
+
+      <button class="view-link" data-jump="dashboard">← Dashboard</button>
+    </div>
   </div>
 
-  <div class="big-table language-full-table">
+  <div id="trafficCustomRange" style="display:none;margin:0 0 16px;gap:8px;align-items:center;flex-wrap:wrap">
+    <input type="date" id="trafficFrom">
+    <span>→</span>
+    <input type="date" id="trafficTo">
+    <button class="view-link" id="trafficApplyCustom">Apply</button>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-card">
+      Human Visitors
+      <b id="trafficVisitors">—</b>
+      <small>Exact first-party unique visitors</small>
+    </div>
+
+    <div class="detail-card">
+      Sessions
+      <b id="trafficSessions">—</b>
+      <small id="trafficSessionsMeta">—</small>
+    </div>
+
+    <div class="detail-card">
+      Pageviews
+      <b id="trafficPageviews">—</b>
+      <small id="trafficPageviewsMeta">—</small>
+    </div>
+
+    <div class="detail-card">
+      Engaged Sessions
+      <b id="trafficEngagedSessions">—</b>
+      <small id="trafficEngagementRate">—</small>
+    </div>
+
+    <div class="detail-card">
+      Leads
+      <b id="trafficLeads">—</b>
+      <small>Confirmed first-party leads</small>
+    </div>
+
+    <div class="detail-card">
+      Conversion
+      <b id="trafficConversion">—</b>
+      <small>Visitor → lead</small>
+    </div>
+  </div>
+
+  <div class="big-table" style="margin-top:18px">
+    <div class="panel-head">
+      <div class="head-left">
+        <span class="panel-icon" style="color:#2d6cdf">↗</span>
+        <h3>Traffic Overview</h3>
+      </div>
+      <span class="ai-tag" id="trafficRangeLabel">Selected period</span>
+    </div>
+
+    <div id="trafficDetailChart" style="min-height:300px;padding:18px 8px 4px"></div>
+  </div>
+
+  <div class="detail-2" style="margin-top:18px">
+
+    <div class="big-table">
+      <div class="panel-head">
+        <div class="head-left">
+          <h3>Acquisition Sources</h3>
+        </div>
+        <span class="ai-tag">First-party attribution</span>
+      </div>
+
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Channel</th>
+              <th>Visitors</th>
+              <th>Sessions</th>
+              <th>Leads</th>
+              <th>Conversion</th>
+            </tr>
+          </thead>
+          <tbody id="trafficSourcesBody">
+            <tr><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="big-table">
+      <div class="panel-head">
+        <div class="head-left">
+          <h3>Channel Mix</h3>
+        </div>
+        <span class="ai-tag">Visitors by channel</span>
+      </div>
+
+      <div id="trafficChannelMix" style="padding-top:8px">
+        <div style="color:var(--muted);font-size:12px">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="big-table" style="margin-top:18px">
+    <div class="panel-head">
+      <div class="head-left">
+        <span class="panel-icon" style="color:#7b5be7">AI</span>
+        <h3>LLM Referrals</h3>
+      </div>
+      <span class="ai-tag">Human referrals only</span>
+    </div>
+
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Visitors</th>
+            <th>Sessions</th>
+            <th>Leads</th>
+            <th>Conversion</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody id="trafficLlmBody">
+          <tr><td colspan="6">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="big-table language-full-table" style="margin-top:18px">
     <div class="panel-head">
       <div class="head-left">
         <span class="panel-icon" style="color:#2d6cdf">◎</span>
         <h3>Language Performance</h3>
       </div>
-      <span class="ai-tag">Visitors · Search · AI · Leads</span>
+      <span class="ai-tag">All 8 languages · exact period visitors</span>
     </div>
 
-    <table>
-      <tr>
-        <th>Language</th>
-        <th>Visitors</th>
-        <th>Pageviews</th>
-        <th>Leads</th>
-        <th>Conversion</th>
-        <th>Search Clicks</th>
-        <th>AI Requests</th>
-        <th>Trend</th>
-      </tr>
-      <tr><td>EN — English</td><td>744</td><td>2,308</td><td>11</td><td>1.48%</td><td>3,102</td><td>4,286</td><td class="up">↑18%</td></tr>
-      <tr><td>RU — Russian</td><td>180</td><td>493</td><td>2</td><td>1.11%</td><td>684</td><td>1,021</td><td class="up">↑11%</td></tr>
-      <tr><td>AR — Arabic</td><td>103</td><td>302</td><td>1</td><td>0.97%</td><td>391</td><td>844</td><td class="up">↑24%</td></tr>
-      <tr><td>ES — Spanish</td><td>77</td><td>217</td><td>1</td><td>1.30%</td><td>276</td><td>603</td><td class="up">↑9%</td></tr>
-      <tr><td>DE — German</td><td>64</td><td>188</td><td>1</td><td>1.56%</td><td>231</td><td>497</td><td class="up">↑7%</td></tr>
-      <tr><td>FR — French</td><td>51</td><td>156</td><td>1</td><td>1.96%</td><td>174</td><td>416</td><td class="up">↑8%</td></tr>
-      <tr><td>HI — Hindi</td><td>39</td><td>115</td><td>0</td><td>0%</td><td>78</td><td>391</td><td>↑3%</td></tr>
-      <tr><td>ZH — Chinese</td><td>26</td><td>82</td><td>0</td><td>0%</td><td>44</td><td>383</td><td>↑2%</td></tr>
-    </table>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Visitors</th>
+            <th>Sessions</th>
+            <th>Pageviews</th>
+            <th>Engaged</th>
+            <th>Leads</th>
+            <th>Conversion</th>
+            <th>Search Clicks</th>
+            <th>AI Requests</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody id="trafficLanguagesBody">
+          <tr><td colspan="10">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="big-table" style="margin-top:18px">
+    <div class="panel-head">
+      <div class="head-left">
+        <span class="panel-icon" style="color:#14a36a">◎</span>
+        <h3>Countries</h3>
+      </div>
+      <span class="ai-tag">Human analytics · known geo only</span>
+    </div>
+
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Country</th>
+            <th>Visitors</th>
+            <th>Sessions</th>
+            <th>Share of known geo</th>
+          </tr>
+        </thead>
+        <tbody id="trafficCountriesBody">
+          <tr><td colspan="4">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="trafficGeoCoverage" style="padding:12px 4px 2px;color:var(--muted);font-size:11px"></div>
   </div>
 
 </section>
+
 
 <section class="screen" id="bots">
   <div class="detail-header"><div><h2>AI & Bot Intelligence</h2><p>Search crawlers, AI search, assistant fetchers, training and SEO bots.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
@@ -1122,5 +1290,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 
 <script src="/assets/js/intelligence-dashboard.js?v=20260924-countries3"></script>
 
+  <script src="assets/js/traffic-detail.js?v=20260924-1"></script>
 </body>
 </html>
