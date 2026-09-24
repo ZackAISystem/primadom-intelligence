@@ -608,6 +608,233 @@ background-size:100% 48px, 78px 100%}
 
 </style>
 
+
+<style id="pages-content-v2-style">
+
+#pages .pages-network-card{
+  padding:16px 16px 12px;
+}
+
+#pages .pages-network-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:13px;
+}
+
+#pages .pages-network-head h3{
+  margin:0 0 3px;
+}
+
+#pages .pages-network-head p{
+  margin:0;
+  color:#77859a;
+  font-size:10px;
+}
+
+#pages .pages-filters{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+#pages .pages-filter{
+  height:34px;
+  border:1px solid #dfe5ee;
+  border-radius:8px;
+  background:#fff;
+  color:#24364f;
+  padding:0 29px 0 10px;
+  font-size:11px;
+  outline:none;
+}
+
+#pages .pages-search{
+  width:205px;
+  padding-right:10px;
+}
+
+#pages .pages-language{
+  width:118px;
+}
+
+#pages .pages-type{
+  width:145px;
+}
+
+#pages .pages-activity{
+  width:145px;
+}
+
+#pages .pages-sort{
+  width:158px;
+}
+
+#pages .pages-table-wrap{
+  width:100%;
+  overflow:hidden;
+}
+
+#pages .pages-table-v2{
+  width:100%;
+  min-width:0 !important;
+  table-layout:fixed;
+  border-collapse:collapse;
+  font-size:10px;
+}
+
+#pages .pages-table-v2 th{
+  padding:8px 5px;
+  color:#738096;
+  font-size:9px;
+  line-height:1.15;
+  white-space:normal;
+}
+
+#pages .pages-table-v2 td{
+  padding:8px 5px;
+  vertical-align:middle;
+  line-height:1.25;
+}
+
+#pages .pages-table-v2 .col-page{
+  width:27%;
+}
+
+#pages .pages-table-v2 .col-type{
+  width:8%;
+}
+
+#pages .pages-table-v2 .col-lang{
+  width:4%;
+}
+
+#pages .pages-table-v2 .col-life{
+  width:12%;
+}
+
+#pages .pages-table-v2 .col-metric{
+  width:5.5%;
+}
+
+#pages .pages-table-v2 .col-gsc{
+  width:7%;
+}
+
+#pages .pages-table-v2 .col-gsc-small{
+  width:6%;
+}
+
+#pages .pages-table-v2 .col-ai{
+  width:6%;
+}
+
+#pages .pages-table-v2 .col-date{
+  width:7%;
+}
+
+#pages .pages-page-url{
+  display:block;
+  color:#203755;
+  font-weight:600;
+  text-decoration:none;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#pages .pages-page-url:hover{
+  color:#236fe5;
+}
+
+#pages .pages-page-entity{
+  display:block;
+  margin-top:3px;
+  color:#8a96a8;
+  font-size:8px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#pages .pages-life{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+}
+
+#pages .pages-life-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:18px;
+  padding:2px 6px;
+  border-radius:99px;
+  background:#f2f5f8;
+  color:#65758a;
+  font-size:8px;
+  white-space:nowrap;
+}
+
+#pages .pages-life-badge.good{
+  background:#eaf8f1;
+  color:#148257;
+}
+
+#pages .pages-metric-zero{
+  color:#a3adbb;
+}
+
+#pages .pages-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+}
+
+#pages .pages-pagination span{
+  color:#77859a;
+  font-size:10px;
+}
+
+#pages .pages-date-label{
+  color:#6d7b91;
+  font-size:10px;
+  font-weight:700;
+}
+
+#pages .pages-date-label input{
+  margin-left:5px;
+  padding:6px 8px;
+  border:1px solid #dfe5ee;
+  border-radius:7px;
+}
+
+@media(max-width:1250px){
+
+  #pages .pages-network-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  #pages .pages-filters{
+    justify-content:flex-start;
+  }
+
+  #pages .pages-table-wrap{
+    overflow:auto;
+  }
+
+  #pages .pages-table-v2{
+    min-width:1050px !important;
+  }
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1676,41 +1903,95 @@ background-size:100% 48px, 78px 100%}
 <section class="screen" id="pages">
 
   <div class="detail-header">
+
     <div>
       <h2>Pages & Content</h2>
-      <p>Canonical Primadom page network with human, search and AI performance.</p>
+
+      <p>
+        Unified page catalog across human traffic, Google Search,
+        AI crawlers and conversions.
+      </p>
     </div>
+
 
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+
       <div class="period">
-        <button data-pages-period="today">Today</button>
-        <button class="active" data-pages-period="7d">7D</button>
-        <button data-pages-period="30d">30D</button>
-        <button data-pages-period="90d">90D</button>
-        <button data-pages-period="custom">Custom ◫</button>
+
+        <button data-pages-period="today">
+          Today
+        </button>
+
+        <button
+          class="active"
+          data-pages-period="7d"
+        >
+          7D
+        </button>
+
+        <button data-pages-period="30d">
+          30D
+        </button>
+
+        <button data-pages-period="90d">
+          90D
+        </button>
+
+        <button data-pages-period="custom">
+          Custom ◫
+        </button>
+
       </div>
 
-      <button class="view-link" data-jump="dashboard">← Dashboard</button>
+      <button
+        class="view-link"
+        data-jump="dashboard"
+      >
+        ← Dashboard
+      </button>
+
     </div>
+
   </div>
 
-  <div id="pagesCustomRange"
-       style="display:none;justify-content:flex-end;align-items:center;gap:8px;margin:-4px 0 16px;flex-wrap:wrap">
 
-    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+  <div
+    id="pagesCustomRange"
+    style="
+      display:none;
+      justify-content:flex-end;
+      align-items:center;
+      gap:8px;
+      margin:-4px 0 16px;
+      flex-wrap:wrap
+    "
+  >
+
+    <label class="pages-date-label">
       From
-      <input type="date" id="pagesFrom"
-             style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px">
+      <input
+        type="date"
+        id="pagesFrom"
+      >
     </label>
 
-    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+    <label class="pages-date-label">
       To
-      <input type="date" id="pagesTo"
-             style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px">
+      <input
+        type="date"
+        id="pagesTo"
+      >
     </label>
 
-    <button class="view-link" id="pagesApplyCustom">Apply</button>
+    <button
+      class="view-link"
+      id="pagesApplyCustom"
+    >
+      Apply
+    </button>
+
   </div>
+
 
   <div class="detail-grid">
 
@@ -1729,7 +2010,9 @@ background-size:100% 48px, 78px 100%}
     <div class="detail-card">
       Indexed
       <b id="pagesIndexed">—</b>
-      <small id="pagesIndexedMeta">Approximate GSC snapshot</small>
+      <small id="pagesIndexedMeta">
+        Approximate GSC snapshot
+      </small>
     </div>
 
     <div class="detail-card">
@@ -1740,30 +2023,41 @@ background-size:100% 48px, 78px 100%}
 
   </div>
 
-  <div class="big-table" style="margin-top:16px">
 
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+  <div
+    class="big-table pages-network-card"
+    style="margin-top:16px"
+  >
+
+    <div class="pages-network-head">
 
       <div>
-        <h3 style="margin-bottom:4px">Page Network</h3>
-        <p id="pagesCatalogMeta"
-           style="margin:0;color:#77859a;font-size:11px">
-          Loading canonical registry…
+        <h3>Page Network</h3>
+
+        <p id="pagesCatalogMeta">
+          Loading page activity…
         </p>
       </div>
 
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+
+      <div class="pages-filters">
 
         <input
           id="pagesSearchInput"
+          class="pages-filter pages-search"
           type="search"
-          placeholder="Search URL or Page ID"
-          style="width:225px;padding:8px 10px;border:1px solid #dfe5ee;border-radius:9px;background:#fff"
+          placeholder="URL or Page ID"
         >
 
-        <select id="pagesLanguageFilter"
-                style="padding:8px 10px;border:1px solid #dfe5ee;border-radius:9px;background:#fff">
-          <option value="">All languages</option>
+
+        <select
+          id="pagesLanguageFilter"
+          class="pages-filter pages-language"
+        >
+          <option value="">
+            All languages
+          </option>
+
           <option value="en">EN</option>
           <option value="ru">RU</option>
           <option value="hi">HI</option>
@@ -1774,63 +2068,207 @@ background-size:100% 48px, 78px 100%}
           <option value="ar">AR</option>
         </select>
 
-        <select id="pagesTypeFilter"
-                style="padding:8px 10px;border:1px solid #dfe5ee;border-radius:9px;background:#fff">
-          <option value="">All page types</option>
-          <option value="project_page">Project</option>
-          <option value="district_page">District</option>
-          <option value="developer_page">Developer</option>
-          <option value="intent_page">Intent</option>
-          <option value="budget_page">Budget</option>
-          <option value="property_type_page">Property Type</option>
-          <option value="buyer_scenario_page">Buyer Scenario</option>
-          <option value="origin_buyer_page">Origin Buyer</option>
-          <option value="ai_answer_page">AI Answer</option>
-          <option value="project_comparison_page">Project Comparison</option>
-          <option value="district_comparison_page">District Comparison</option>
-          <option value="developer_comparison_page">Developer Comparison</option>
+
+        <select
+          id="pagesTypeFilter"
+          class="pages-filter pages-type"
+        >
+          <option value="">
+            All types
+          </option>
+
+          <option value="project_page">
+            Project
+          </option>
+
+          <option value="district_page">
+            District
+          </option>
+
+          <option value="developer_page">
+            Developer
+          </option>
+
+          <option value="intent_page">
+            Intent
+          </option>
+
+          <option value="budget_page">
+            Budget
+          </option>
+
+          <option value="property_type_page">
+            Property Type
+          </option>
+
+          <option value="buyer_scenario_page">
+            Buyer Scenario
+          </option>
+
+          <option value="origin_buyer_page">
+            Origin Buyer
+          </option>
+
+          <option value="ai_answer_page">
+            AI Answer
+          </option>
+
+          <option value="project_comparison_page">
+            Project Comparison
+          </option>
+
+          <option value="district_comparison_page">
+            District Comparison
+          </option>
+
+          <option value="developer_comparison_page">
+            Developer Comparison
+          </option>
+
+        </select>
+
+
+        <select
+          id="pagesActivityFilter"
+          class="pages-filter pages-activity"
+        >
+          <option value="any">
+            Any activity
+          </option>
+
+          <option value="human">
+            Human traffic
+          </option>
+
+          <option value="search">
+            Google visibility
+          </option>
+
+          <option value="clicks">
+            Google clicks
+          </option>
+
+          <option value="ai">
+            AI crawled
+          </option>
+
+          <option value="leads">
+            Leads
+          </option>
+
+          <option value="all">
+            All pages
+          </option>
+
+        </select>
+
+
+        <select
+          id="pagesSortFilter"
+          class="pages-filter pages-sort"
+        >
+
+          <option value="visitors">
+            Visitors ↓
+          </option>
+
+          <option value="pageviews">
+            Pageviews ↓
+          </option>
+
+          <option value="leads">
+            Leads ↓
+          </option>
+
+          <option value="google_impressions">
+            Google impressions ↓
+          </option>
+
+          <option value="google_clicks">
+            Google clicks ↓
+          </option>
+
+          <option value="ai_requests">
+            AI requests ↓
+          </option>
+
+          <option value="last_activity">
+            Last activity ↓
+          </option>
+
         </select>
 
       </div>
+
     </div>
 
-    <div style="overflow:auto">
-      <table style="min-width:1370px">
+
+    <div class="pages-table-wrap">
+
+      <table class="pages-table-v2">
+
+        <colgroup>
+          <col class="col-page">
+          <col class="col-type">
+          <col class="col-lang">
+          <col class="col-life">
+          <col class="col-metric">
+          <col class="col-metric">
+          <col class="col-metric">
+          <col class="col-gsc">
+          <col class="col-gsc-small">
+          <col class="col-ai">
+          <col class="col-date">
+        </colgroup>
+
         <thead>
           <tr>
             <th>Page</th>
             <th>Type</th>
-            <th>Language</th>
-            <th>Entity</th>
+            <th>Lang</th>
             <th>Lifecycle</th>
             <th>Visitors</th>
-            <th>Pageviews</th>
+            <th>Views</th>
             <th>Leads</th>
-            <th>Google Impressions</th>
-            <th>Google Clicks</th>
-            <th>AI Requests</th>
+            <th>GSC Impr.</th>
+            <th>GSC Clicks</th>
+            <th>AI Crawl</th>
             <th>Last Activity</th>
           </tr>
         </thead>
 
         <tbody id="pagesCatalogBody">
-          <tr><td colspan="12">Loading…</td></tr>
+
+          <tr>
+            <td colspan="11">
+              Loading…
+            </td>
+          </tr>
+
         </tbody>
+
       </table>
+
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px">
 
-      <button class="view-link" id="pagesPrev">
+    <div class="pages-pagination">
+
+      <button
+        class="view-link"
+        id="pagesPrev"
+      >
         ← Previous
       </button>
 
-      <span id="pagesPagination"
-            style="font-size:11px;color:#77859a">
+      <span id="pagesPagination">
         —
       </span>
 
-      <button class="view-link" id="pagesNext">
+      <button
+        class="view-link"
+        id="pagesNext"
+      >
         Next →
       </button>
 
@@ -2158,6 +2596,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 
 <script src="/assets/js/ai-bots-detail.js?v=20260924193234"></script>
 <script src="/assets/js/search-detail.js?v=20260924194454"></script>
-<script src="/assets/js/pages-detail.js?v=20260924183947"></script>
+<script src="/assets/js/pages-detail.js?v=20260924201502"></script>
 </body>
 </html>

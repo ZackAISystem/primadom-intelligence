@@ -1,51 +1,155 @@
 (() => {
   "use strict";
 
+
   const OVERVIEW =
     "https://analytics.primadom.ai/api/intelligence/overview";
 
   const PAGES =
     "https://analytics.primadom.ai/api/intelligence/pages";
 
-  const $ = id =>
-    document.getElementById(id);
 
-  const number = value =>
-    new Intl.NumberFormat("en-US")
-      .format(Number(value || 0));
+  const $ =
+    id =>
+      document.getElementById(
+        id
+      );
 
-  const safe = value =>
-    String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
 
-  const metric = value =>
-    value == null
-      ? "—"
-      : number(value);
+  const num =
+    value =>
+      new Intl.NumberFormat(
+        "en-US"
+      ).format(
+        Number(
+          value || 0
+        )
+      );
+
+
+  const safe =
+    value =>
+      String(
+        value ?? ""
+      )
+        .replaceAll(
+          "&",
+          "&amp;"
+        )
+        .replaceAll(
+          "<",
+          "&lt;"
+        )
+        .replaceAll(
+          ">",
+          "&gt;"
+        )
+        .replaceAll(
+          '"',
+          "&quot;"
+        )
+        .replaceAll(
+          "'",
+          "&#039;"
+        );
+
 
   const TYPES = {
-    project_page: "Project",
-    district_page: "District",
-    developer_page: "Developer",
-    intent_page: "Intent",
-    budget_page: "Budget",
-    property_type_page: "Property Type",
-    buyer_scenario_page: "Buyer Scenario",
-    origin_buyer_page: "Origin Buyer",
-    ai_answer_page: "AI Answer",
-    project_comparison_page: "Project Comparison",
-    district_comparison_page: "District Comparison",
-    developer_comparison_page: "Developer Comparison"
+    project_page:
+      "Project",
+
+    district_page:
+      "District",
+
+    developer_page:
+      "Developer",
+
+    intent_page:
+      "Intent",
+
+    budget_page:
+      "Budget",
+
+    property_type_page:
+      "Property",
+
+    buyer_scenario_page:
+      "Buyer",
+
+    origin_buyer_page:
+      "Origin",
+
+    ai_answer_page:
+      "AI Answer",
+
+    project_comparison_page:
+      "Project Compare",
+
+    district_comparison_page:
+      "District Compare",
+
+    developer_comparison_page:
+      "Developer Compare"
   };
 
-  function normalizePeriod(value) {
+
+  const ACTIVITY_LABELS = {
+    any:
+      "pages with activity",
+
+    human:
+      "pages with human traffic",
+
+    search:
+      "pages visible in Google",
+
+    clicks:
+      "pages with Google clicks",
+
+    ai:
+      "pages crawled by AI / bots",
+
+    leads:
+      "pages with leads",
+
+    all:
+      "canonical pages"
+  };
+
+
+  let period =
+    normalizePeriod(
+      localStorage.getItem(
+        "primadom-intelligence-detail-period"
+      ) ||
+      "7d"
+    );
+
+
+  let page =
+    1;
+
+
+  const pageSize =
+    50;
+
+
+  let hasMore =
+    false;
+
+
+  let searchTimer =
+    null;
+
+
+  function normalizePeriod(
+    value
+  ) {
     const p =
-      String(value || "")
-        .toLowerCase();
+      String(
+        value || ""
+      ).toLowerCase();
+
 
     if (
       p === "today" ||
@@ -54,288 +158,76 @@
       return "today";
     }
 
-    if (
-      ["7d","30d","90d","custom"]
-        .includes(p)
-    ) {
-      return p;
-    }
 
-    return "7d";
+    return [
+      "7d",
+      "30d",
+      "90d",
+      "custom"
+    ].includes(
+      p
+    )
+      ? p
+      : "7d";
   }
 
-  let period =
-    normalizePeriod(
-      localStorage.getItem(
-        "primadom-intelligence-detail-period"
-      ) || "7d"
-    );
 
-  let page =
-    1;
-
-  const pageSize =
-    50;
-
-  let totalPages =
-    null;
-
-  let hasMore =
-    false;
-
-  let searchTimer =
-    null;
-
-  function activate(value) {
+  function activatePeriod(
+    value
+  ) {
     document
       .querySelectorAll(
         "[data-pages-period]"
       )
-      .forEach(button => {
-        button.classList.toggle(
-          "active",
-          button.dataset.pagesPeriod === value
-        );
-      });
-  }
-
-  function showCustom(show) {
-    if ($("pagesCustomRange")) {
-      $("pagesCustomRange").style.display =
-        show
-          ? "flex"
-          : "none";
-    }
-  }
-
-  function overviewSuffix() {
-    let suffix =
-      `period=${encodeURIComponent(period)}`;
-
-    if (
-      period === "custom"
-    ) {
-      const from =
-        $("pagesFrom")?.value;
-
-      const to =
-        $("pagesTo")?.value;
-
-      if (
-        from &&
-        to
-      ) {
-        suffix +=
-          `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-      }
-    }
-
-    return suffix;
-  }
-
-  function renderKpis(payload) {
-    const data =
-      payload.data || {};
-
-    const contract =
-      data.lifecycle_contract || {};
-
-    $("pagesRegistered").textContent =
-      metric(
-        contract.registered?.value
-      );
-
-    $("pagesSitemap").textContent =
-      metric(
-        contract.sitemap?.value
-      );
-
-    $("pagesIndexed").textContent =
-      contract.indexed?.value == null
-        ? "—"
-        : `≈${number(contract.indexed.value)}`;
-
-    $("pagesIndexedMeta").textContent =
-      contract.indexed?.snapshot_date
-        ? `Approximate snapshot · ${contract.indexed.snapshot_date}`
-        : "Approximate GSC snapshot";
-
-    $("pagesSearchVisible").textContent =
-      metric(
-        contract.search_visible?.value
-      );
-  }
-
-  function renderCatalog(payload) {
-    const items =
-      payload.items || [];
-
-    totalPages =
-      payload.total_pages == null
-        ? null
-        : Number(
-            payload.total_pages
+      .forEach(
+        button => {
+          button.classList.toggle(
+            "active",
+            button.dataset.pagesPeriod ===
+              value
           );
-
-    hasMore =
-      Boolean(
-        payload.has_more
+        }
       );
-
-    if (
-      payload.total != null
-    ) {
-      $("pagesCatalogMeta").textContent =
-        `${number(payload.total)} canonical pages · selected period ${payload.range?.from || "—"} → ${payload.range?.to || "—"}`;
-    } else {
-      $("pagesCatalogMeta").textContent =
-        `Filtered canonical pages · selected period ${payload.range?.from || "—"} → ${payload.range?.to || "—"}`;
-    }
-
-    if (
-      totalPages != null
-    ) {
-      $("pagesPagination").textContent =
-        `Page ${payload.page} of ${number(totalPages)} · ${number(payload.total)} pages`;
-    } else {
-      $("pagesPagination").textContent =
-        `Page ${payload.page}`;
-    }
-
-    $("pagesPrev").disabled =
-      payload.page <= 1;
-
-    $("pagesNext").disabled =
-      !hasMore;
-
-    $("pagesCatalogBody").innerHTML =
-      items.length
-        ? items.map(
-            row => `
-              <tr>
-
-                <td>
-                  <a
-                    class="page-live-link"
-                    href="https://primadom.ai${safe(row.canonical_url_path || row.url_path)}"
-                    target="_blank"
-                    rel="noopener"
-                  >${safe(row.url_path)}</a>
-                </td>
-
-                <td>
-                  ${safe(
-                    TYPES[row.page_type_id] ||
-                    String(row.page_type_id || "—")
-                      .replaceAll("_", " ")
-                  )}
-                </td>
-
-                <td>
-                  ${safe(
-                    String(
-                      row.language_code || "—"
-                    ).toUpperCase()
-                  )}
-                </td>
-
-                <td>
-                  ${safe(
-                    row.entity || "—"
-                  )}
-                </td>
-
-                <td>
-                  ${safe(
-                    row.lifecycle || "—"
-                  )}
-                </td>
-
-                <td>
-                  ${metric(row.visitors)}
-                </td>
-
-                <td>
-                  ${metric(row.pageviews)}
-                </td>
-
-                <td>
-                  ${metric(row.leads)}
-                </td>
-
-                <td>
-                  ${metric(row.google_impressions)}
-                </td>
-
-                <td>
-                  ${metric(row.google_clicks)}
-                </td>
-
-                <td>
-                  ${metric(row.ai_bot_requests)}
-                </td>
-
-                <td>
-                  ${safe(
-                    row.last_activity || "—"
-                  )}
-                </td>
-
-              </tr>
-            `
-          ).join("")
-        : '<tr><td colspan="12">No canonical pages match these filters.</td></tr>';
   }
 
-  async function loadOverview() {
-    const response =
-      await fetch(
-        `${OVERVIEW}?${overviewSuffix()}`
-      );
 
-    const payload =
-      await response.json();
-
+  function showCustom(
+    show
+  ) {
     if (
-      response.ok &&
-      payload?.data
+      $("pagesCustomRange")
     ) {
-      renderKpis(
-        payload
-      );
+      $("pagesCustomRange")
+        .style.display =
+          show
+            ? "flex"
+            : "none";
     }
   }
 
-  async function loadCatalog() {
-    $("pagesCatalogBody").innerHTML =
-      '<tr><td colspan="12">Loading…</td></tr>';
 
+  function periodParams() {
     const params =
       new URLSearchParams();
+
 
     params.set(
       "period",
       period
     );
 
-    params.set(
-      "page",
-      String(page)
-    );
-
-    params.set(
-      "page_size",
-      String(pageSize)
-    );
 
     if (
       period === "custom"
     ) {
       const from =
-        $("pagesFrom")?.value;
+        $("pagesFrom")
+          ?.value;
 
       const to =
-        $("pagesTo")?.value;
+        $("pagesTo")
+          ?.value;
+
 
       if (
         from &&
@@ -353,18 +245,430 @@
       }
     }
 
+
+    return params;
+  }
+
+
+  function metric(
+    value
+  ) {
+    const n =
+      Number(
+        value || 0
+      );
+
+
+    if (!n) {
+      return '<span class="pages-metric-zero">0</span>';
+    }
+
+
+    return `<b>${num(n)}</b>`;
+  }
+
+
+  function shortDate(
+    value
+  ) {
+    if (!value) {
+      return "—";
+    }
+
+
+    const match =
+      String(
+        value
+      ).match(
+        /^(\d{4})-(\d{2})-(\d{2})/
+      );
+
+
+    if (!match) {
+      return String(
+        value
+      );
+    }
+
+
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ];
+
+
+    return `${months[Number(match[2])-1]} ${Number(match[3])}`;
+  }
+
+
+  function lifeBadge(
+    value
+  ) {
+    if (!value) {
+      return "";
+    }
+
+
+    const normalized =
+      String(
+        value
+      ).toLowerCase();
+
+
+    const good =
+      (
+        normalized ===
+          "published" ||
+        normalized ===
+          "indexed" ||
+        normalized ===
+          "submitted" ||
+        normalized ===
+          "deployed"
+      );
+
+
+    const label =
+      String(
+        value
+      )
+        .replaceAll(
+          "_",
+          " "
+        );
+
+
+    return `
+      <span class="pages-life-badge${good ? " good" : ""}">
+        ${safe(label)}
+      </span>
+    `;
+  }
+
+
+  function renderKpis(
+    payload
+  ) {
+    const data =
+      payload.data ||
+      {};
+
+
+    const contract =
+      data.lifecycle_contract ||
+      {};
+
+
+    $("pagesRegistered").textContent =
+      contract.registered
+        ?.value == null
+          ? "—"
+          : num(
+              contract.registered.value
+            );
+
+
+    $("pagesSitemap").textContent =
+      contract.sitemap
+        ?.value == null
+          ? "—"
+          : num(
+              contract.sitemap.value
+            );
+
+
+    $("pagesIndexed").textContent =
+      contract.indexed
+        ?.value == null
+          ? "—"
+          : `≈${num(contract.indexed.value)}`;
+
+
+    $("pagesIndexedMeta").textContent =
+      contract.indexed
+        ?.snapshot_date
+          ? `Approximate snapshot · ${contract.indexed.snapshot_date}`
+          : "Approximate GSC snapshot";
+
+
+    $("pagesSearchVisible").textContent =
+      contract.search_visible
+        ?.value == null
+          ? "—"
+          : num(
+              contract.search_visible.value
+            );
+  }
+
+
+  function renderCatalog(
+    payload
+  ) {
+    const items =
+      payload.items ||
+      [];
+
+
+    hasMore =
+      Boolean(
+        payload.has_more
+      );
+
+
+    const activity =
+      payload.activity ||
+      $("pagesActivityFilter")
+        ?.value ||
+      "any";
+
+
+    $("pagesCatalogMeta").textContent =
+      `${num(payload.total)} ${ACTIVITY_LABELS[activity] || "matching pages"} · selected period ${payload.range?.from || "—"} → ${payload.range?.to || "—"}`;
+
+
+    $("pagesPagination").textContent =
+      payload.total_pages
+        ? `Page ${num(payload.page)} of ${num(payload.total_pages)} · ${num(payload.total)} pages`
+        : "No matching pages";
+
+
+    $("pagesPrev").disabled =
+      Number(
+        payload.page || 1
+      ) <= 1;
+
+
+    $("pagesNext").disabled =
+      !hasMore;
+
+
+    $("pagesCatalogBody").innerHTML =
+      items.length
+        ? items.map(
+            row => {
+
+              const path =
+                row.canonical_url_path ||
+                row.url_path ||
+                "";
+
+
+              const entity =
+                row.entity
+                  ? `
+                    <span class="pages-page-entity">
+                      ${safe(row.entity)}
+                    </span>
+                  `
+                  : "";
+
+
+              const lifecycle = `
+                <div class="pages-life">
+                  ${lifeBadge(row.publish_status)}
+                  ${lifeBadge(row.indexation_status)}
+                </div>
+              `;
+
+
+              return `
+                <tr>
+
+                  <td>
+                    <a
+                      class="pages-page-url"
+                      href="https://primadom.ai${safe(path)}"
+                      target="_blank"
+                      rel="noopener"
+                      title="${safe(row.url_path)}"
+                    >
+                      ${safe(row.url_path)}
+                    </a>
+
+                    ${entity}
+                  </td>
+
+
+                  <td>
+                    ${safe(
+                      TYPES[row.page_type_id] ||
+                      String(
+                        row.page_type_id ||
+                        "—"
+                      )
+                        .replace(
+                          /_page$/,
+                          ""
+                        )
+                        .replaceAll(
+                          "_",
+                          " "
+                        )
+                    )}
+                  </td>
+
+
+                  <td>
+                    <b>
+                      ${safe(
+                        String(
+                          row.language_code ||
+                          "—"
+                        ).toUpperCase()
+                      )}
+                    </b>
+                  </td>
+
+
+                  <td>
+                    ${lifecycle}
+                  </td>
+
+
+                  <td>
+                    ${metric(row.visitors)}
+                  </td>
+
+
+                  <td>
+                    ${metric(row.pageviews)}
+                  </td>
+
+
+                  <td>
+                    ${metric(row.leads)}
+                  </td>
+
+
+                  <td>
+                    ${metric(row.google_impressions)}
+                  </td>
+
+
+                  <td>
+                    ${metric(row.google_clicks)}
+                  </td>
+
+
+                  <td>
+                    ${metric(row.ai_bot_requests)}
+                  </td>
+
+
+                  <td>
+                    ${safe(shortDate(row.last_activity))}
+                  </td>
+
+                </tr>
+              `;
+            }
+          ).join("")
+        : `
+          <tr>
+            <td colspan="11">
+              No pages match these filters for the selected period.
+            </td>
+          </tr>
+        `;
+  }
+
+
+  async function loadOverview() {
+    try {
+      const params =
+        periodParams();
+
+
+      const response =
+        await fetch(
+          `${OVERVIEW}?${params.toString()}`
+        );
+
+
+      const payload =
+        await response.json();
+
+
+      if (
+        response.ok &&
+        payload?.data
+      ) {
+        renderKpis(
+          payload
+        );
+      }
+
+    } catch (error) {
+      console.error(
+        "Pages overview:",
+        error
+      );
+    }
+  }
+
+
+  async function loadCatalog() {
+    $("pagesCatalogBody").innerHTML =
+      '<tr><td colspan="11">Loading…</td></tr>';
+
+
+    const params =
+      periodParams();
+
+
+    params.set(
+      "page",
+      String(
+        page
+      )
+    );
+
+
+    params.set(
+      "page_size",
+      String(
+        pageSize
+      )
+    );
+
+
     const query =
       $("pagesSearchInput")
         ?.value
         .trim();
 
+
     const language =
       $("pagesLanguageFilter")
         ?.value;
 
+
     const type =
       $("pagesTypeFilter")
         ?.value;
+
+
+    const activity =
+      $("pagesActivityFilter")
+        ?.value ||
+      "any";
+
+
+    const sort =
+      $("pagesSortFilter")
+        ?.value ||
+      "visitors";
+
 
     if (query) {
       params.set(
@@ -373,12 +677,14 @@
       );
     }
 
+
     if (language) {
       params.set(
         "language",
         language
       );
     }
+
 
     if (type) {
       params.set(
@@ -387,14 +693,29 @@
       );
     }
 
+
+    params.set(
+      "activity",
+      activity
+    );
+
+
+    params.set(
+      "sort",
+      sort
+    );
+
+
     try {
       const response =
         await fetch(
           `${PAGES}?${params.toString()}`
         );
 
+
       const payload =
         await response.json();
+
 
       if (
         !response.ok ||
@@ -405,9 +726,11 @@
         );
       }
 
+
       renderCatalog(
         payload
       );
+
 
     } catch (error) {
       console.error(
@@ -415,71 +738,101 @@
         error
       );
 
+
       $("pagesCatalogBody").innerHTML =
-        '<tr><td colspan="12">Page catalog could not be loaded.</td></tr>';
+        `
+          <tr>
+            <td colspan="11">
+              Page catalog could not be loaded.
+            </td>
+          </tr>
+        `;
     }
   }
 
-  async function reload() {
-    await Promise.all([
+
+  function reloadAll() {
+    return Promise.all([
       loadOverview(),
       loadCatalog()
     ]);
   }
 
+
+  function resetAndLoad() {
+    page =
+      1;
+
+    loadCatalog();
+  }
+
+
   document
     .querySelectorAll(
       "[data-pages-period]"
     )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          period =
-            normalizePeriod(
-              button.dataset.pagesPeriod
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            period =
+              normalizePeriod(
+                button.dataset.pagesPeriod
+              );
+
+
+            localStorage.setItem(
+              "primadom-intelligence-detail-period",
+              period
             );
 
-          localStorage.setItem(
-            "primadom-intelligence-detail-period",
-            period
-          );
 
-          activate(
-            period
-          );
+            activatePeriod(
+              period
+            );
 
-          if (
-            period === "custom"
-          ) {
+
+            if (
+              period === "custom"
+            ) {
+              showCustom(
+                true
+              );
+
+              return;
+            }
+
+
             showCustom(
-              true
+              false
             );
 
-            return;
+            page =
+              1;
+
+            reloadAll();
           }
+        );
+      }
+    );
 
-          showCustom(
-            false
-          );
-
-          page =
-            1;
-
-          reload();
-        }
-      );
-    });
 
   $("pagesApplyCustom")
     ?.addEventListener(
       "click",
       () => {
+
         const from =
-          $("pagesFrom")?.value;
+          $("pagesFrom")
+            ?.value;
 
         const to =
-          $("pagesTo")?.value;
+          $("pagesTo")
+            ?.value;
+
 
         if (
           !from ||
@@ -488,114 +841,132 @@
           return;
         }
 
+
         period =
           "custom";
+
 
         localStorage.setItem(
           "primadom-intelligence-detail-period",
           "custom"
         );
 
+
         localStorage.setItem(
           "primadom-intelligence-pages-custom-from",
           from
         );
+
 
         localStorage.setItem(
           "primadom-intelligence-pages-custom-to",
           to
         );
 
-        activate(
+
+        activatePeriod(
           "custom"
         );
 
+
         page =
           1;
 
-        reload();
+        reloadAll();
       }
     );
 
-  $("pagesLanguageFilter")
-    ?.addEventListener(
-      "change",
-      () => {
-        page =
-          1;
 
-        loadCatalog();
-      }
-    );
+  [
+    "pagesLanguageFilter",
+    "pagesTypeFilter",
+    "pagesActivityFilter",
+    "pagesSortFilter"
+  ].forEach(
+    id => {
+      $(id)
+        ?.addEventListener(
+          "change",
+          resetAndLoad
+        );
+    }
+  );
 
-  $("pagesTypeFilter")
-    ?.addEventListener(
-      "change",
-      () => {
-        page =
-          1;
-
-        loadCatalog();
-      }
-    );
 
   $("pagesSearchInput")
     ?.addEventListener(
       "input",
       () => {
+
         clearTimeout(
           searchTimer
         );
 
+
         searchTimer =
           setTimeout(
-            () => {
-              page =
-                1;
-
-              loadCatalog();
-            },
+            resetAndLoad,
             300
           );
       }
     );
 
+
   $("pagesPrev")
     ?.addEventListener(
       "click",
       () => {
+
         if (
           page <= 1
         ) {
           return;
         }
 
-        page -= 1;
+
+        page -=
+          1;
+
 
         loadCatalog();
       }
     );
 
+
   $("pagesNext")
     ?.addEventListener(
       "click",
       () => {
+
         if (
           !hasMore
         ) {
           return;
         }
 
-        page += 1;
+
+        page +=
+          1;
+
 
         loadCatalog();
       }
     );
 
+
   function initial() {
-    activate(
+    activatePeriod(
       period
     );
+
+
+    $("pagesActivityFilter").value =
+      "any";
+
+
+    $("pagesSortFilter").value =
+      "visitors";
+
 
     if (
       period === "custom"
@@ -605,10 +976,12 @@
           "primadom-intelligence-pages-custom-from"
         );
 
+
       const to =
         localStorage.getItem(
           "primadom-intelligence-pages-custom-to"
         );
+
 
       if (
         from &&
@@ -624,13 +997,15 @@
           true
         );
 
-        reload();
+        reloadAll();
 
         return;
       }
 
+
       period =
         "7d";
+
 
       localStorage.setItem(
         "primadom-intelligence-detail-period",
@@ -638,16 +1013,20 @@
       );
     }
 
-    activate(
+
+    activatePeriod(
       period
     );
+
 
     showCustom(
       false
     );
 
-    reload();
+
+    reloadAll();
   }
+
 
   initial();
 
