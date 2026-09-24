@@ -642,16 +642,25 @@
               kpis.google_avg_position
             );
 
+          const googlePeriodLabel =
+            range?.period === "today"
+              ? "Today"
+              : range?.period === "7d"
+                ? "Week"
+                : range?.period === "30d"
+                  ? "Month"
+                  : range?.period === "90d"
+                    ? "90D"
+                    : range?.period === "custom"
+                      ? "Custom"
+                      : label;
+
           trends[1].textContent =
             Number.isFinite(avg)
-              ? `Avg ${avg.toFixed(
+              ? `Avg pos. ${avg.toFixed(
                   1
-                )} · ${shortDate(
-                  latest
-                )}`
-              : `Data through ${shortDate(
-                  latest
-                )}`;
+                )} · ${googlePeriodLabel}`
+              : googlePeriodLabel;
         }
 
       } else {
