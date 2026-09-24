@@ -659,8 +659,8 @@
             Number.isFinite(avg)
               ? `Avg pos. ${avg.toFixed(
                   1
-                )}`
-              : "Avg pos. —";
+                )} · ${googlePeriodLabel}`
+              : `Avg pos. — · ${googlePeriodLabel}`;
         }
 
       } else {
