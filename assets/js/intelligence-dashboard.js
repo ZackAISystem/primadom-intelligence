@@ -1471,17 +1471,25 @@
       map.style.opacity = "";
     }
 
-    const total =
-      rows.reduce(
-        (sum, row) =>
-          sum +
-          Number(
-            row.visitors || 0
-          ),
-        0
+    const first =
+      rows[0] || {};
+
+    const coverage =
+      Number(
+        first.geo_coverage_pct || 0
       );
 
-    list.innerHTML =
+    const knownVisitors =
+      Number(
+        first.geo_known_visitors || 0
+      );
+
+    const allVisitors =
+      Number(
+        first.all_visitors || 0
+      );
+
+    const countryRows =
       rows
         .slice(0, 5)
         .map(row => {
@@ -1494,12 +1502,9 @@
             );
 
           const share =
-            total > 0
-              ? (
-                  visitors /
-                  total
-                ) * 100
-              : 0;
+            Number(
+              row.share_of_known_geo_pct || 0
+            );
 
           return `
             <div class="country-line">
@@ -1523,6 +1528,31 @@
           `;
         })
         .join("");
+
+    const coverageNote = `
+      <div style="
+        margin-top:10px;
+        padding-top:9px;
+        border-top:1px solid var(--line);
+        font-size:11px;
+        line-height:1.45;
+        color:var(--muted);
+      ">
+        Geo coverage:
+        <b style="color:var(--navy2)">
+          ${coverage.toFixed(2)}%
+        </b>
+        · ${num(knownVisitors)} of
+        ${num(allVisitors)} visitors
+        <br>
+        Country share is based on visitors
+        with known geo only.
+      </div>
+    `;
+
+    list.innerHTML =
+      countryRows +
+      coverageNote;
   }
 
 
