@@ -522,6 +522,16 @@ background-size:100% 48px, 78px 100%}
 }
 </style>
 
+
+<style id="search-pages-production-style">
+@media(max-width:1050px){
+  #search .search-detail-two,
+  #search .search-summary-grid{
+    grid-template-columns:1fr !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1333,7 +1343,7 @@ background-size:100% 48px, 78px 100%}
     </div>
 
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <div class="period" id="searchPeriodControl">
+      <div class="period">
         <button data-search-period="today">Today</button>
         <button class="active" data-search-period="7d">7D</button>
         <button data-search-period="30d">30D</button>
@@ -1345,33 +1355,19 @@ background-size:100% 48px, 78px 100%}
     </div>
   </div>
 
-  <div
-    id="searchCustomRange"
-    style="
-      display:none;
-      justify-content:flex-end;
-      align-items:center;
-      gap:8px;
-      margin:-4px 0 16px;
-      flex-wrap:wrap
-    "
-  >
+  <div id="searchCustomRange"
+       style="display:none;justify-content:flex-end;align-items:center;gap:8px;margin:-4px 0 16px;flex-wrap:wrap">
+
     <label style="font-size:11px;color:#6d7b91;font-weight:700">
       From
-      <input
-        type="date"
-        id="searchFrom"
-        style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px"
-      >
+      <input type="date" id="searchFrom"
+             style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px">
     </label>
 
     <label style="font-size:11px;color:#6d7b91;font-weight:700">
       To
-      <input
-        type="date"
-        id="searchTo"
-        style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px"
-      >
+      <input type="date" id="searchTo"
+             style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px">
     </label>
 
     <button class="view-link" id="searchApplyCustom">Apply</button>
@@ -1382,7 +1378,7 @@ background-size:100% 48px, 78px 100%}
     <div class="detail-card">
       Impressions
       <b id="searchImpressions">—</b>
-      <small id="searchImpressionsMeta">Google Search Console</small>
+      <small>Google Search Console</small>
     </div>
 
     <div class="detail-card">
@@ -1397,23 +1393,18 @@ background-size:100% 48px, 78px 100%}
       <small>Clicks ÷ impressions</small>
     </div>
 
-    <div class="detail-card">
-      Average Position
+    <div class="detail-card"
+         title="1 = highest position. Lower is better. Averaged across Google Search impressions.">
+      Average Search Position
       <b id="searchPosition">—</b>
-      <small>Impression-weighted position</small>
+      <small>1 = highest · lower is better</small>
     </div>
 
   </div>
 
-  <div
-    style="
-      display:grid;
-      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-      gap:16px;
-      margin-top:16px
-    "
-    class="search-summary-grid"
-  >
+  <div class="search-summary-grid"
+       style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+
     <div class="detail-card">
       Search-visible Pages
       <b id="searchVisiblePages">—</b>
@@ -1422,66 +1413,136 @@ background-size:100% 48px, 78px 100%}
 
     <div class="detail-card">
       GSC Data Through
-      <b id="searchLatestDate" style="font-size:24px">—</b>
-      <small id="searchFreshnessMeta">Final Google Search Console data</small>
+      <b id="searchLatestDate" style="font-size:23px">—</b>
+      <small id="searchFreshnessMeta">Google Search Console freshness</small>
     </div>
+
   </div>
 
-  <div
-    id="searchCoverageNotice"
-    style="
-      margin-top:16px;
-      padding:12px 15px;
-      border:1px solid #dfe5ee;
-      border-radius:12px;
-      background:#fff;
-      color:#68778e;
-      font-size:12px;
-      line-height:1.5
-    "
-  >
-    Loading Google Search Console coverage…
+  <div id="searchCoverageNotice"
+       style="margin-top:16px;padding:12px 15px;border:1px solid #dfe5ee;border-radius:12px;background:#fff;color:#68778e;font-size:12px;line-height:1.5">
+    —
   </div>
 
   <div class="panel" style="margin-top:16px">
     <div class="panel-head">
       <div>
         <h3>Search Visibility Over Time</h3>
-        <p id="searchRangeLabel">Google impressions and clicks for selected period</p>
+        <p id="searchRangeLabel">Selected period</p>
       </div>
     </div>
 
-    <div
-      id="searchVisibilityChart"
-      style="height:340px;padding:8px 4px 0"
-    >—</div>
+    <div id="searchVisibilityChart"
+         style="height:340px;padding:8px 4px 0">
+      —
+    </div>
   </div>
 
-  <div
-    style="
-      display:grid;
-      grid-template-columns:minmax(0,1.45fr) minmax(340px,.55fr);
-      gap:16px;
-      margin-top:16px
-    "
-    class="search-two-column"
-  >
+  <div class="search-detail-two"
+       style="display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-top:16px">
 
-    <div class="big-table" style="margin-top:0">
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:flex-start;
-        gap:20px;
-        flex-wrap:wrap
-      ">
-        <div>
-          <h3 style="margin-bottom:4px">Search Performance by Language</h3>
-          <p style="margin:0;color:#77859a;font-size:12px">
-            Google Search Console · all 8 Primadom languages
-          </p>
-        </div>
+    <div class="big-table">
+      <h3>Top Search Pages</h3>
+      <p style="margin:4px 0 10px;color:#77859a;font-size:11px">
+        Google Search visibility · separate from Dashboard Top Pages
+      </p>
+
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th>Type</th>
+              <th>Language</th>
+              <th>Impressions</th>
+              <th>Clicks</th>
+              <th>CTR</th>
+              <th>Avg Position</th>
+            </tr>
+          </thead>
+
+          <tbody id="searchPagesBody">
+            <tr><td colspan="7">—</td></tr>
+          </tbody>
+        </table>
       </div>
+    </div>
+
+    <div class="big-table">
+      <h3>Top Search Queries</h3>
+
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Query</th>
+              <th>Impressions</th>
+              <th>Clicks</th>
+              <th>CTR</th>
+              <th>Avg Position</th>
+            </tr>
+          </thead>
+
+          <tbody id="searchQueriesBody">
+            <tr><td colspan="5">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="search-detail-two"
+       style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+
+    <div class="big-table">
+      <h3>Countries</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Country</th>
+            <th>Impressions</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+          </tr>
+        </thead>
+
+        <tbody id="searchCountriesBody">
+          <tr><td colspan="4">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="big-table">
+      <h3>Devices</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>Impressions</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+          </tr>
+        </thead>
+
+        <tbody id="searchDevicesBody">
+          <tr><td colspan="4">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="search-detail-two"
+       style="display:grid;grid-template-columns:1.45fr .55fr;gap:16px;margin-top:16px">
+
+    <div class="big-table">
+      <h3>Search Performance by Language</h3>
+      <p style="margin:4px 0 10px;color:#77859a;font-size:11px">
+        All 8 Primadom languages · final daily GSC attribution
+      </p>
 
       <table>
         <thead>
@@ -1500,30 +1561,14 @@ background-size:100% 48px, 78px 100%}
       </table>
     </div>
 
-    <div class="big-table" style="margin-top:0">
+    <div class="big-table">
       <h3>Search Visibility Context</h3>
 
       <table>
         <tbody id="searchContextBody">
-          <tr>
-            <td>Search-visible</td>
-            <td style="text-align:right"><b>—</b></td>
-          </tr>
+          <tr><td colspan="2">—</td></tr>
         </tbody>
       </table>
-
-      <p
-        style="
-          margin:14px 0 0;
-          color:#77859a;
-          font-size:11px;
-          line-height:1.5
-        "
-      >
-        Indexed is an approximate Google Search Console snapshot.
-        Registered and Sitemap are Primadom network inventory context,
-        not period metrics.
-      </p>
     </div>
 
   </div>
@@ -1531,9 +1576,170 @@ background-size:100% 48px, 78px 100%}
 </section>
 
 <section class="screen" id="pages">
-  <div class="detail-header"><div><h2>Pages & Content</h2><p>Full Primadom page network with performance and agent-priority signals.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
-  <div class="detail-grid"><div class="detail-card">Registered Pages<b>180,063</b><small>8 languages</small></div><div class="detail-card">Active Production<b>179,992</b><small>Canonical routes</small></div><div class="detail-card">Need Attention<b>1,467</b><small>Across active rules</small></div><div class="detail-card">Fastest Growing<b>286</b><small>Positive momentum</small></div></div>
-  <div class="big-table"><h3>Page Network</h3><table><tr><th>Page</th><th>Language</th><th>Type</th><th>Visitors</th><th>Search</th><th>AI Crawl</th><th>Leads</th><th>Priority</th></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td>EN</td><td>Project</td><td>482</td><td>Strong</td><td>Yes</td><td>6</td><td>Growth</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td>EN</td><td>District</td><td>317</td><td>Strong</td><td>Yes</td><td>4</td><td>Growth</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/ru/projects/passo/" target="_blank" rel="noopener">/ru/projects/passo/</a></td><td>RU</td><td>Project</td><td>71</td><td>Medium</td><td>Yes</td><td>0</td><td>Improve CTA</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/ai-answers/service-charges/" target="_blank" rel="noopener">/en/ai-answers/service-charges/</a></td><td>EN</td><td>AI Answer</td><td>86</td><td>High impressions</td><td>Yes</td><td>1</td><td>CTR</td></tr></table></div>
+
+  <div class="detail-header">
+    <div>
+      <h2>Pages & Content</h2>
+      <p>Canonical Primadom page network with human, search and AI performance.</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="period">
+        <button data-pages-period="today">Today</button>
+        <button class="active" data-pages-period="7d">7D</button>
+        <button data-pages-period="30d">30D</button>
+        <button data-pages-period="90d">90D</button>
+        <button data-pages-period="custom">Custom ◫</button>
+      </div>
+
+      <button class="view-link" data-jump="dashboard">← Dashboard</button>
+    </div>
+  </div>
+
+  <div id="pagesCustomRange"
+       style="display:none;justify-content:flex-end;align-items:center;gap:8px;margin:-4px 0 16px;flex-wrap:wrap">
+
+    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+      From
+      <input type="date" id="pagesFrom"
+             style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px">
+    </label>
+
+    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+      To
+      <input type="date" id="pagesTo"
+             style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px">
+    </label>
+
+    <button class="view-link" id="pagesApplyCustom">Apply</button>
+  </div>
+
+  <div class="detail-grid">
+
+    <div class="detail-card">
+      Registered Pages
+      <b id="pagesRegistered">—</b>
+      <small>Canonical registry</small>
+    </div>
+
+    <div class="detail-card">
+      Sitemap Pages
+      <b id="pagesSitemap">—</b>
+      <small>Production sitemap routes</small>
+    </div>
+
+    <div class="detail-card">
+      Indexed
+      <b id="pagesIndexed">—</b>
+      <small id="pagesIndexedMeta">Approximate GSC snapshot</small>
+    </div>
+
+    <div class="detail-card">
+      Search-visible
+      <b id="pagesSearchVisible">—</b>
+      <small>Pages with Google signals</small>
+    </div>
+
+  </div>
+
+  <div class="big-table" style="margin-top:16px">
+
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+
+      <div>
+        <h3 style="margin-bottom:4px">Page Network</h3>
+        <p id="pagesCatalogMeta"
+           style="margin:0;color:#77859a;font-size:11px">
+          Loading canonical registry…
+        </p>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+
+        <input
+          id="pagesSearchInput"
+          type="search"
+          placeholder="Search URL or Page ID"
+          style="width:225px;padding:8px 10px;border:1px solid #dfe5ee;border-radius:9px;background:#fff"
+        >
+
+        <select id="pagesLanguageFilter"
+                style="padding:8px 10px;border:1px solid #dfe5ee;border-radius:9px;background:#fff">
+          <option value="">All languages</option>
+          <option value="en">EN</option>
+          <option value="ru">RU</option>
+          <option value="hi">HI</option>
+          <option value="zh">ZH</option>
+          <option value="es">ES</option>
+          <option value="fr">FR</option>
+          <option value="de">DE</option>
+          <option value="ar">AR</option>
+        </select>
+
+        <select id="pagesTypeFilter"
+                style="padding:8px 10px;border:1px solid #dfe5ee;border-radius:9px;background:#fff">
+          <option value="">All page types</option>
+          <option value="project_page">Project</option>
+          <option value="district_page">District</option>
+          <option value="developer_page">Developer</option>
+          <option value="intent_page">Intent</option>
+          <option value="budget_page">Budget</option>
+          <option value="property_type_page">Property Type</option>
+          <option value="buyer_scenario_page">Buyer Scenario</option>
+          <option value="origin_buyer_page">Origin Buyer</option>
+          <option value="ai_answer_page">AI Answer</option>
+          <option value="project_comparison_page">Project Comparison</option>
+          <option value="district_comparison_page">District Comparison</option>
+          <option value="developer_comparison_page">Developer Comparison</option>
+        </select>
+
+      </div>
+    </div>
+
+    <div style="overflow:auto">
+      <table style="min-width:1370px">
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th>Type</th>
+            <th>Language</th>
+            <th>Entity</th>
+            <th>Lifecycle</th>
+            <th>Visitors</th>
+            <th>Pageviews</th>
+            <th>Leads</th>
+            <th>Google Impressions</th>
+            <th>Google Clicks</th>
+            <th>AI Requests</th>
+            <th>Last Activity</th>
+          </tr>
+        </thead>
+
+        <tbody id="pagesCatalogBody">
+          <tr><td colspan="12">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px">
+
+      <button class="view-link" id="pagesPrev">
+        ← Previous
+      </button>
+
+      <span id="pagesPagination"
+            style="font-size:11px;color:#77859a">
+        —
+      </span>
+
+      <button class="view-link" id="pagesNext">
+        Next →
+      </button>
+
+    </div>
+
+  </div>
+
 </section>
 
 
@@ -1853,6 +2059,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 </script>
 
 <script src="/assets/js/ai-bots-detail.js?v=20260924160139"></script>
-<script src="/assets/js/search-detail.js?v=20260924164512"></script>
+<script src="/assets/js/search-detail.js?v=20260924183947"></script>
+<script src="/assets/js/pages-detail.js?v=20260924183947"></script>
 </body>
 </html>

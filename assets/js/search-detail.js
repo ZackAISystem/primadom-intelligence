@@ -1,16 +1,18 @@
 (() => {
   "use strict";
 
-  const API =
+  const OVERVIEW =
     "https://analytics.primadom.ai/api/intelligence/overview";
+
+  const DETAIL =
+    "https://analytics.primadom.ai/api/intelligence/search-detail";
 
   const $ = id =>
     document.getElementById(id);
 
-  const num = value =>
-    new Intl.NumberFormat("en-US").format(
-      Number(value || 0)
-    );
+  const number = value =>
+    new Intl.NumberFormat("en-US")
+      .format(Number(value || 0));
 
   const safe = value =>
     String(value ?? "")
@@ -20,7 +22,19 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
 
-  const languageNames = {
+  const percent = value => {
+    const n =
+      Number(value || 0);
+
+    const v =
+      Math.abs(n) <= 1
+        ? n * 100
+        : n;
+
+    return `${v.toFixed(2)}%`;
+  };
+
+  const LANGUAGES = {
     en: "English",
     ru: "Russian",
     hi: "Hindi",
@@ -31,59 +45,42 @@
     ar: "Arabic"
   };
 
-  const languageOrder = [
-    "en",
-    "ru",
-    "hi",
-    "zh",
-    "es",
-    "fr",
-    "de",
-    "ar"
-  ];
-
-  function pctFromRatio(value) {
-    const n = Number(value);
-
-    if (!Number.isFinite(n)) {
-      return "—";
-    }
-
-    const percent =
-      Math.abs(n) <= 1
-        ? n * 100
-        : n;
-
-    return `${percent.toFixed(2)}%`;
-  }
-
-  function ctr(clicks, impressions) {
-    const i = Number(impressions || 0);
-
-    if (!i) {
-      return "0.00%";
-    }
-
-    return `${(
-      Number(clicks || 0) /
-      i *
-      100
-    ).toFixed(2)}%`;
-  }
+  const COUNTRIES = {
+    usa: "United States",
+    are: "United Arab Emirates",
+    gbr: "United Kingdom",
+    ind: "India",
+    deu: "Germany",
+    fra: "France",
+    esp: "Spain",
+    can: "Canada",
+    aus: "Australia",
+    sau: "Saudi Arabia",
+    qat: "Qatar",
+    kwt: "Kuwait",
+    sgp: "Singapore",
+    hkg: "Hong Kong",
+    chn: "China",
+    rus: "Russia",
+    kaz: "Kazakhstan",
+    pak: "Pakistan"
+  };
 
   function normalizePeriod(value) {
     const p =
       String(value || "")
         .toLowerCase();
 
-    if (p === "1d" || p === "today")
+    if (
+      p === "today" ||
+      p === "1d"
+    ) {
       return "today";
+    }
 
     if (
-      p === "7d" ||
-      p === "30d" ||
-      p === "90d" ||
-      p === "custom"
+      ["7d","30d","90d","custom"]
+        .includes(p)
     ) {
       return p;
     }
@@ -91,14 +88,14 @@
     return "7d";
   }
 
-  let currentPeriod =
+  let period =
     normalizePeriod(
       localStorage.getItem(
         "primadom-intelligence-detail-period"
       ) || "7d"
     );
 
-  function activateButton(period) {
+  function activate(value) {
     document
       .querySelectorAll(
         "[data-search-period]"
@@ -106,106 +103,102 @@
       .forEach(button => {
         button.classList.toggle(
           "active",
-          button.dataset.searchPeriod === period
+          button.dataset.searchPeriod === value
         );
       });
   }
 
   function showCustom(show) {
-    const root =
-      $("searchCustomRange");
-
-    if (root) {
-      root.style.display =
-        show ? "flex" : "none";
+    if ($("searchCustomRange")) {
+      $("searchCustomRange").style.display =
+        show
+          ? "flex"
+          : "none";
     }
   }
 
-  function setLoading() {
-    [
-      "searchImpressions",
-      "searchClicks",
-      "searchCtr",
-      "searchPosition",
-      "searchVisiblePages",
-      "searchLatestDate"
-    ].forEach(id => {
-      const el = $(id);
-      if (el) el.textContent = "—";
-    });
-
-    if ($("searchCoverageNotice")) {
-      $("searchCoverageNotice").textContent =
-        "Loading Google Search Console coverage…";
+  function dateLabel(value) {
+    if (!value) {
+      return "—";
     }
 
-    if ($("searchVisibilityChart")) {
-      $("searchVisibilityChart").textContent =
-        "Loading search visibility…";
+    const string =
+      String(value);
+
+    const match =
+      string.match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/
+      );
+
+    if (!match) {
+      return string;
     }
 
-    if ($("searchLanguagesBody")) {
-      $("searchLanguagesBody").innerHTML =
-        '<tr><td colspan="5">Loading…</td></tr>';
+    const months = [
+      "Jan","Feb","Mar","Apr",
+      "May","Jun","Jul","Aug",
+      "Sep","Oct","Nov","Dec"
+    ];
+
+    const base =
+      `${months[Number(match[2]) - 1]} ${Number(match[3])}, ${match[1]}`;
+
+    if (match[4]) {
+      return `${base} · ${match[4]}:${match[5]} PT`;
     }
 
-    if ($("searchContextBody")) {
-      $("searchContextBody").innerHTML =
-        '<tr><td colspan="2">Loading…</td></tr>';
-    }
+    return base;
   }
 
-  function searchCoverage(data) {
-    return (
-      data.coverage?.google_search ||
-      {}
-    );
+  function pageTypeLabel(value) {
+    return String(value || "—")
+      .replace(/_page$/i, "")
+      .replaceAll("_", " ")
+      .replace(
+        /\b\w/g,
+        c => c.toUpperCase()
+      );
   }
 
-  function latestSearchDate(data) {
-    const c =
-      searchCoverage(data);
+  function renderOverview(payload) {
+    const data =
+      payload.data || {};
 
     const live =
-      data.google_search_live ||
-      {};
+      data.google_search_live || {};
 
-    return (
-      c.latest_in_period ||
-      live.window_to ||
-      live.latest_final_date ||
-      c.latest_available ||
-      null
-    );
-  }
+    const coverage =
+      data.coverage?.google_search || {};
 
-  function hasPeriodSearchData(data) {
-    const c =
-      searchCoverage(data);
+    const preliminary =
+      Boolean(
+        live.preliminary
+      );
 
-    const live =
-      data.google_search_live ||
-      {};
+    $("searchImpressions").textContent =
+      number(
+        live.impressions
+      );
 
-    if (
-      c.has_data_for_period === false
-    ) {
-      return false;
-    }
+    $("searchClicks").textContent =
+      number(
+        live.clicks
+      );
 
-    return Boolean(
-      latestSearchDate(data) &&
-      live.available !== false
-    );
-  }
+    $("searchCtr").textContent =
+      percent(
+        live.ctr
+      );
 
-  function renderKpis(data) {
-    const live =
-      data.google_search_live ||
-      {};
+    const position =
+      Number(
+        live.avg_position
+      );
 
-    const hasData =
-      hasPeriodSearchData(data);
+    $("searchPosition").textContent =
+      Number.isFinite(position)
+        ? position.toFixed(1)
+        : "—";
 
     const visible =
       data.lifecycle_contract
@@ -215,357 +208,107 @@
         ?.google_signal_pages ??
       null;
 
-    if (!hasData) {
-      $("searchImpressions").textContent = "—";
-      $("searchClicks").textContent = "—";
-      $("searchCtr").textContent = "—";
-      $("searchPosition").textContent = "—";
-    } else {
-      $("searchImpressions").textContent =
-        num(live.impressions);
-
-      $("searchClicks").textContent =
-        num(live.clicks);
-
-      $("searchCtr").textContent =
-        pctFromRatio(live.ctr);
-
-      const pos =
-        Number(live.avg_position);
-
-      $("searchPosition").textContent =
-        Number.isFinite(pos)
-          ? pos.toFixed(1)
-          : "—";
-    }
-
     $("searchVisiblePages").textContent =
-      visible === null
+      visible == null
         ? "—"
-        : num(visible);
+        : number(visible);
 
-    const latest =
-      latestSearchDate(data);
+    const through =
+      live.window_to ||
+      live.latest_final_date ||
+      coverage.latest_in_period ||
+      coverage.latest_available ||
+      null;
 
     $("searchLatestDate").textContent =
-      latest || "—";
-  }
-
-  function renderCoverage(
-    data,
-    range
-  ) {
-    const c =
-      searchCoverage(data);
-
-    const live =
-      data.google_search_live ||
-      {};
-
-    const latest =
-      latestSearchDate(data);
-
-    const source =
-      c.source_system ===
-      "google_search_console_property_api"
-        ? "Google Search Console Property API"
-        : "Google Search Console";
-
-    const selected =
-      range?.from && range?.to
-        ? `${range.from} → ${range.to}`
-        : "selected period";
-
-    if (
-      c.has_data_for_period === false
-    ) {
-      $("searchCoverageNotice").innerHTML =
-        `<b>No final GSC data is available inside ${safe(selected)}.</b> ` +
-        `Latest available Google Search Console date: ` +
-        `<b>${safe(c.latest_available || "—")}</b>.`;
-
-      $("searchFreshnessMeta").textContent =
-        "No final GSC data in selected period";
-
-      return;
-    }
-
-    const state =
-      live.data_state ||
-      c.data_state ||
-      "final";
-
-    $("searchCoverageNotice").innerHTML =
-      `<b>${safe(source)}</b> · selected period ` +
-      `<b>${safe(selected)}</b> · final search data available through ` +
-      `<b>${safe(latest || "—")}</b>` +
-      (
-        range?.to &&
-        latest &&
-        latest < range.to
-          ? ` · the remaining selected days are not treated as zero`
-          : ""
-      ) +
-      `.`;
+      dateLabel(
+        through
+      );
 
     $("searchFreshnessMeta").textContent =
-      `${state === "final" ? "Final" : safe(state)} Google Search Console data`;
+      preliminary
+        ? "Latest hourly data · preliminary"
+        : "Final Google Search Console data";
+
+    const selected =
+      payload.range?.from &&
+      payload.range?.to
+        ? `${payload.range.from} → ${payload.range.to}`
+        : "Selected period";
+
+    $("searchCoverageNotice").innerHTML =
+      preliminary
+        ? `<b>Google Search Console Property API</b> · ${safe(selected)} · hourly headline data through <b>${safe(dateLabel(through))}</b> · preliminary. Final page/query/language breakdowns appear after daily GSC finalization.`
+        : `<b>Google Search Console Property API</b> · selected period <b>${safe(selected)}</b> · final search data available through <b>${safe(dateLabel(through))}</b>.`;
 
     $("searchRangeLabel").textContent =
-      latest
-        ? `${selected} · GSC through ${latest}`
-        : selected;
+      preliminary
+        ? `${selected} · preliminary hourly headline`
+        : `${selected} · GSC through ${dateLabel(through)}`;
+
+    renderChart(
+      data,
+      preliminary,
+      through
+    );
+
+    renderLanguages(
+      data,
+      preliminary
+    );
+
+    renderContext(
+      data
+    );
   }
 
-  function renderLanguages(data) {
-    const body =
-      $("searchLanguagesBody");
-
-    const hasData =
-      hasPeriodSearchData(data);
-
-    const rows =
-      Array.isArray(data.languages)
-        ? data.languages
-        : [];
-
-    if (
-      !hasData ||
-      !rows.length
-    ) {
-      body.innerHTML =
-        '<tr><td colspan="5">No final Google Search Console data in this selected period.</td></tr>';
-      return;
-    }
-
-    const byCode =
-      new Map(
-        rows.map(row => [
-          String(
-            row.language_code || ""
-          ).toLowerCase(),
-          row
-        ])
-      );
-
-    const ordered =
-      languageOrder.map(code => {
-        return (
-          byCode.get(code) || {
-            language_code: code,
-            search_impressions: 0,
-            search_clicks: 0
-          }
-        );
-      });
-
-    const total =
-      ordered.reduce(
-        (sum, row) =>
-          sum +
-          Number(
-            row.search_impressions ||
-            0
-          ),
-        0
-      );
-
-    body.innerHTML =
-      ordered.map(row => {
-        const code =
-          String(
-            row.language_code || ""
-          ).toLowerCase();
-
-        const impressions =
-          Number(
-            row.search_impressions ||
-            0
-          );
-
-        const clicks =
-          Number(
-            row.search_clicks ||
-            0
-          );
-
-        const share =
-          total > 0
-            ? impressions / total * 100
-            : 0;
-
-        return `
-          <tr>
-            <td>
-              <b>${safe(
-                languageNames[code] ||
-                code.toUpperCase()
-              )}</b>
-            </td>
-            <td>${num(impressions)}</td>
-            <td>${num(clicks)}</td>
-            <td>${ctr(clicks, impressions)}</td>
-            <td>${share.toFixed(2)}%</td>
-          </tr>
-        `;
-      }).join("");
-  }
-
-  function renderContext(data) {
-    const contract =
-      data.lifecycle_contract ||
-      {};
-
-    const indexing =
-      data.indexing_snapshot ||
-      {};
-
-    const registered =
-      contract.registered?.value ??
-      data.kpis?.registered_pages ??
-      null;
-
-    const sitemap =
-      contract.sitemap?.value ??
-      data.kpis?.sitemap_pages ??
-      null;
-
-    const visible =
-      contract.search_visible?.value ??
-      data.lifecycle?.google_signal_pages ??
-      null;
-
-    const indexed =
-      contract.indexed?.value ??
-      indexing.indexed_pages ??
-      null;
-
-    const snapshotDate =
-      contract.indexed?.snapshot_date ??
-      indexing.snapshot_date ??
-      null;
-
-    const indexedLabel =
-      indexed === null
-        ? "—"
-        : `≈${num(indexed)}`;
-
-    $("searchContextBody").innerHTML = `
-      <tr>
-        <td>Search-visible pages</td>
-        <td style="text-align:right"><b>${visible === null ? "—" : num(visible)}</b></td>
-      </tr>
-
-      <tr>
-        <td>Indexed snapshot</td>
-        <td style="text-align:right"><b>${indexedLabel}</b></td>
-      </tr>
-
-      <tr>
-        <td>Index snapshot date</td>
-        <td style="text-align:right"><b>${safe(snapshotDate || "—")}</b></td>
-      </tr>
-
-      <tr>
-        <td>Sitemap pages</td>
-        <td style="text-align:right"><b>${sitemap === null ? "—" : num(sitemap)}</b></td>
-      </tr>
-
-      <tr>
-        <td>Registered pages</td>
-        <td style="text-align:right"><b>${registered === null ? "—" : num(registered)}</b></td>
-      </tr>
-    `;
-  }
-
-  function niceMax(value) {
-    const v =
-      Math.max(
-        Number(value || 0),
-        1
-      );
-
-    const power =
-      Math.pow(
-        10,
-        Math.floor(
-          Math.log10(v)
-        )
-      );
-
-    const scaled =
-      v / power;
-
-    let nice = 1;
-
-    if (scaled <= 1) nice = 1;
-    else if (scaled <= 2) nice = 2;
-    else if (scaled <= 5) nice = 5;
-    else nice = 10;
-
-    return nice * power;
-  }
-
-  function renderChart(data) {
+  function renderChart(
+    data,
+    preliminary,
+    through
+  ) {
     const root =
       $("searchVisibilityChart");
 
-    const latest =
-      latestSearchDate(data);
+    if (preliminary) {
+      root.innerHTML =
+        '<div style="height:100%;display:grid;place-items:center;color:#77859a;text-align:center;padding:30px">Hourly headline metrics are available now.<br>Daily Search Visibility chart appears when Google finalizes the day.</div>';
 
-    const hasData =
-      hasPeriodSearchData(data);
+      return;
+    }
 
     let rows =
-      Array.isArray(data.traffic_daily)
+      Array.isArray(
+        data.traffic_daily
+      )
         ? [...data.traffic_daily]
         : [];
 
-    if (latest) {
+    if (through) {
       rows =
-        rows.filter(row => {
-          const date =
-            row.data_date ||
-            row.date ||
-            "";
-
-          return (
-            !date ||
-            date <= latest
-          );
-        });
+        rows.filter(
+          row =>
+            String(
+              row.data_date || ""
+            ) <=
+            String(through).slice(0,10)
+        );
     }
 
-    rows.sort((a, b) =>
-      String(
-        a.data_date ||
-        a.date ||
-        ""
-      ).localeCompare(
-        String(
-          b.data_date ||
-          b.date ||
-          ""
-        )
-      )
-    );
+    if (!rows.length) {
+      root.textContent =
+        "No final GSC observations in this period.";
 
-    if (
-      !hasData ||
-      !rows.length
-    ) {
-      root.innerHTML =
-        '<div style="height:100%;display:grid;place-items:center;color:#77859a">No final Google Search Console observations in this selected period.</div>';
       return;
     }
 
     const width = 1120;
-    const height = 310;
+    const height = 300;
 
     const left = 68;
     const right = 62;
-    const top = 30;
-    const bottom = 48;
+    const top = 25;
+    const bottom = 45;
 
     const usableW =
       width - left - right;
@@ -574,23 +317,53 @@
       height - top - bottom;
 
     const impressions =
-      rows.map(row =>
-        Number(
-          row.search_impressions ||
-          0
-        )
+      rows.map(
+        r =>
+          Number(
+            r.search_impressions || 0
+          )
       );
 
     const clicks =
-      rows.map(row =>
-        Number(
-          row.search_clicks ||
-          0
-        )
+      rows.map(
+        r =>
+          Number(
+            r.search_clicks || 0
+          )
       );
 
+    const nice = value => {
+      const v =
+        Math.max(
+          value,
+          1
+        );
+
+      const power =
+        Math.pow(
+          10,
+          Math.floor(
+            Math.log10(v)
+          )
+        );
+
+      const scaled =
+        v / power;
+
+      const step =
+        scaled <= 1
+          ? 1
+          : scaled <= 2
+            ? 2
+            : scaled <= 5
+              ? 5
+              : 10;
+
+      return step * power;
+    };
+
     const maxI =
-      niceMax(
+      nice(
         Math.max(
           ...impressions,
           1
@@ -598,90 +371,74 @@
       );
 
     const maxC =
-      niceMax(
+      nice(
         Math.max(
           ...clicks,
           1
         )
       );
 
-    const x =
-      index =>
-        left +
-        (
-          rows.length === 1
-            ? usableW / 2
-            : (
-                index /
-                (rows.length - 1)
-              ) * usableW
-        );
+    const x = index =>
+      left +
+      (
+        rows.length === 1
+          ? usableW / 2
+          : index /
+            (rows.length - 1) *
+            usableW
+      );
 
-    const yI =
-      value =>
-        top +
-        usableH -
-        (
-          Number(value || 0) /
-          maxI
-        ) * usableH;
+    const yI = value =>
+      top +
+      usableH -
+      (
+        Number(value || 0) /
+        maxI *
+        usableH
+      );
 
-    const yC =
-      value =>
-        top +
-        usableH -
-        (
-          Number(value || 0) /
-          maxC
-        ) * usableH;
+    const yC = value =>
+      top +
+      usableH -
+      (
+        Number(value || 0) /
+        maxC *
+        usableH
+      );
 
     const grid =
       Array.from(
         { length: 5 },
-        (_, i) => {
+        (_, index) => {
           const ratio =
-            i / 4;
-
-          const valueI =
-            Math.round(
-              maxI *
-              (1 - ratio)
-            );
-
-          const valueC =
-            Math.round(
-              maxC *
-              (1 - ratio)
-            );
+            index / 4;
 
           const y =
             top +
-            usableH * ratio;
+            usableH *
+            ratio;
 
           return `
             <line
               x1="${left}"
               y1="${y}"
-              x2="${width-right}"
+              x2="${width - right}"
               y2="${y}"
               stroke="#e8edf4"
             />
-
             <text
-              x="${left-10}"
-              y="${y+4}"
+              x="${left - 10}"
+              y="${y + 4}"
               text-anchor="end"
               font-size="10"
               fill="#7a8698"
-            >${num(valueI)}</text>
-
+            >${number(Math.round(maxI * (1 - ratio)))}</text>
             <text
-              x="${width-right+10}"
-              y="${y+4}"
-              text-anchor="start"
+              x="${width - right + 10}"
+              y="${y + 4}"
               font-size="10"
               fill="#7a8698"
-            >${num(valueC)}</text>
+            >${number(Math.round(maxC * (1 - ratio)))}</text>
           `;
         }
       ).join("");
@@ -692,11 +449,8 @@
         Math.min(
           46,
           usableW /
-          Math.max(
-            rows.length,
-            1
-          ) *
-          .46
+          rows.length *
+          0.46
         )
       );
 
@@ -705,58 +459,45 @@
         (row, index) => {
           const value =
             Number(
-              row.search_impressions ||
-              0
+              row.search_impressions || 0
             );
 
           const y =
             yI(value);
 
-          const h =
-            top +
-            usableH -
-            y;
-
-          const date =
-            row.data_date ||
-            row.date ||
-            "";
-
           return `
             <rect
-              x="${x(index)-barWidth/2}"
+              x="${x(index) - barWidth / 2}"
               y="${y}"
               width="${barWidth}"
-              height="${Math.max(h,1)}"
+              height="${Math.max(top + usableH - y, 1)}"
               rx="3"
               fill="#dce8ff"
             >
-              <title>${safe(date)} · ${num(value)} impressions</title>
+              <title>${safe(row.data_date)} · ${number(value)} impressions</title>
             </rect>
           `;
         }
       ).join("");
 
-    const clickPoints =
+    const points =
       rows.map(
         (row, index) => ({
           x: x(index),
           y: yC(
             row.search_clicks
           ),
-          value: Number(
-            row.search_clicks ||
-            0
-          ),
+          value:
+            Number(
+              row.search_clicks || 0
+            ),
           date:
-            row.data_date ||
-            row.date ||
-            ""
+            row.data_date
         })
       );
 
-    const clickLine =
-      clickPoints
+    const line =
+      points
         .map(
           point =>
             `${point.x},${point.y}`
@@ -764,71 +505,37 @@
         .join(" ");
 
     const dots =
-      clickPoints.map(point => `
-        <circle
-          cx="${point.x}"
-          cy="${point.y}"
-          r="4"
-          fill="#16a36a"
-        >
-          <title>${safe(point.date)} · ${num(point.value)} clicks</title>
-        </circle>
-      `).join("");
+      points.map(
+        point => `
+          <circle
+            cx="${point.x}"
+            cy="${point.y}"
+            r="4"
+            fill="#16a36a"
+          >
+            <title>${safe(point.date)} · ${number(point.value)} clicks</title>
+          </circle>
+        `
+      ).join("");
 
     const labels =
       rows.map(
-        (row, index) => {
-          const date =
-            row.data_date ||
-            row.date ||
-            "";
-
-          return `
-            <text
-              x="${x(index)}"
-              y="${height-14}"
-              text-anchor="middle"
-              font-size="10"
-              fill="#7a8698"
-            >${safe(String(date).slice(5))}</text>
-          `;
-        }
+        (row, index) => `
+          <text
+            x="${x(index)}"
+            y="${height - 12}"
+            text-anchor="middle"
+            font-size="10"
+            fill="#7a8698"
+          >${safe(String(row.data_date).slice(5))}</text>
+        `
       ).join("");
 
     root.innerHTML = `
-      <div style="
-        display:flex;
-        gap:18px;
-        align-items:center;
-        margin:0 8px 8px;
-        font-size:12px;
-        color:#65758c
-      ">
-        <span>
-          <i style="
-            display:inline-block;
-            width:10px;
-            height:10px;
-            border-radius:3px;
-            background:#dce8ff;
-            margin-right:6px
-          "></i>
-          Impressions
-        </span>
-
-        <span>
-          <i style="
-            display:inline-block;
-            width:10px;
-            height:10px;
-            border-radius:50%;
-            background:#16a36a;
-            margin-right:6px
-          "></i>
-          Clicks
-        </span>
-
-        <span style="margin-left:auto;font-size:11px">
+      <div style="display:flex;gap:18px;margin:0 8px 8px;font-size:12px;color:#65758c">
+        <span>▰ Impressions</span>
+        <span style="color:#16a36a">● Clicks</span>
+        <span style="margin-left:auto">
           Left axis: impressions · Right axis: clicks
         </span>
       </div>
@@ -842,13 +549,12 @@
         ${bars}
 
         <polyline
-          points="${clickLine}"
+          points="${line}"
           fill="none"
           stroke="#16a36a"
           stroke-width="2.7"
           stroke-linecap="round"
           stroke-linejoin="round"
-          vector-effect="non-scaling-stroke"
         />
 
         ${dots}
@@ -857,114 +563,346 @@
     `;
   }
 
-  function renderAll(payload) {
-    const data =
-      payload?.data ||
-      {};
+  function renderLanguages(
+    data,
+    preliminary
+  ) {
+    const body =
+      $("searchLanguagesBody");
 
-    const range =
-      payload?.range ||
-      {};
+    if (preliminary) {
+      body.innerHTML =
+        '<tr><td colspan="5">Hourly language breakdown is not available yet. Final daily breakdown will appear after GSC finalization.</td></tr>';
 
-    renderKpis(data);
-    renderCoverage(
-      data,
-      range
-    );
-    renderChart(data);
-    renderLanguages(data);
-    renderContext(data);
+      return;
+    }
+
+    const order =
+      [
+        "en","ru","hi","zh",
+        "es","fr","de","ar"
+      ];
+
+    const rows =
+      Array.isArray(
+        data.languages
+      )
+        ? data.languages
+        : [];
+
+    const map =
+      new Map(
+        rows.map(
+          row => [
+            String(
+              row.language_code || ""
+            ).toLowerCase(),
+            row
+          ]
+        )
+      );
+
+    const normalized =
+      order.map(
+        code =>
+          map.get(code) || {
+            language_code:
+              code,
+            search_impressions:
+              0,
+            search_clicks:
+              0
+          }
+      );
+
+    const total =
+      normalized.reduce(
+        (sum, row) =>
+          sum +
+          Number(
+            row.search_impressions || 0
+          ),
+        0
+      );
+
+    body.innerHTML =
+      normalized.map(
+        row => {
+          const code =
+            String(
+              row.language_code || ""
+            ).toLowerCase();
+
+          const impressions =
+            Number(
+              row.search_impressions || 0
+            );
+
+          const clicks =
+            Number(
+              row.search_clicks || 0
+            );
+
+          const ctr =
+            impressions
+              ? clicks /
+                impressions *
+                100
+              : 0;
+
+          const share =
+            total
+              ? impressions /
+                total *
+                100
+              : 0;
+
+          return `
+            <tr>
+              <td><b>${safe(LANGUAGES[code] || code.toUpperCase())}</b></td>
+              <td>${number(impressions)}</td>
+              <td>${number(clicks)}</td>
+              <td>${ctr.toFixed(2)}%</td>
+              <td>${share.toFixed(2)}%</td>
+            </tr>
+          `;
+        }
+      ).join("");
   }
 
-  function showError(error) {
-    console.error(
-      "Search Performance:",
-      error
-    );
+  function renderContext(data) {
+    const contract =
+      data.lifecycle_contract || {};
 
-    if ($("searchCoverageNotice")) {
-      $("searchCoverageNotice").textContent =
-        "Google Search Console data could not be loaded.";
-    }
+    const indexed =
+      contract.indexed?.value ??
+      null;
 
-    if ($("searchVisibilityChart")) {
-      $("searchVisibilityChart").textContent =
-        "Search visibility data could not be loaded.";
-    }
+    const sitemap =
+      contract.sitemap?.value ??
+      null;
 
-    if ($("searchLanguagesBody")) {
-      $("searchLanguagesBody").innerHTML =
-        '<tr><td colspan="5">Data could not be loaded.</td></tr>';
-    }
+    const registered =
+      contract.registered?.value ??
+      null;
+
+    const visible =
+      contract.search_visible?.value ??
+      null;
+
+    $("searchContextBody").innerHTML = `
+      <tr>
+        <td>Search-visible pages</td>
+        <td style="text-align:right"><b>${visible == null ? "—" : number(visible)}</b></td>
+      </tr>
+
+      <tr>
+        <td>Indexed snapshot</td>
+        <td style="text-align:right"><b>${indexed == null ? "—" : "≈" + number(indexed)}</b></td>
+      </tr>
+
+      <tr>
+        <td>Index snapshot date</td>
+        <td style="text-align:right"><b>${safe(contract.indexed?.snapshot_date || "—")}</b></td>
+      </tr>
+
+      <tr>
+        <td>Sitemap pages</td>
+        <td style="text-align:right"><b>${sitemap == null ? "—" : number(sitemap)}</b></td>
+      </tr>
+
+      <tr>
+        <td>Registered pages</td>
+        <td style="text-align:right"><b>${registered == null ? "—" : number(registered)}</b></td>
+      </tr>
+    `;
   }
 
-  async function loadSearch(
-    period,
+  function detailUnavailable(message) {
+    $("searchPagesBody").innerHTML =
+      `<tr><td colspan="7">${safe(message)}</td></tr>`;
+
+    $("searchQueriesBody").innerHTML =
+      `<tr><td colspan="5">${safe(message)}</td></tr>`;
+
+    $("searchCountriesBody").innerHTML =
+      `<tr><td colspan="4">${safe(message)}</td></tr>`;
+
+    $("searchDevicesBody").innerHTML =
+      `<tr><td colspan="4">${safe(message)}</td></tr>`;
+  }
+
+  function renderDetail(detail) {
+    if (!detail?.available) {
+      detailUnavailable(
+        "Hourly breakdown is not available yet. Final GSC breakdowns appear after daily finalization."
+      );
+
+      return;
+    }
+
+    const pages =
+      detail.top_search_pages || [];
+
+    $("searchPagesBody").innerHTML =
+      pages.length
+        ? pages.map(
+            row => `
+              <tr>
+                <td>
+                  <a
+                    class="page-live-link"
+                    href="${safe(row.url)}"
+                    target="_blank"
+                    rel="noopener"
+                  >${safe(row.url_path)}</a>
+                </td>
+
+                <td>${safe(pageTypeLabel(row.page_type_id))}</td>
+                <td>${safe(String(row.language_code || "—").toUpperCase())}</td>
+                <td>${number(row.impressions)}</td>
+                <td>${number(row.clicks)}</td>
+                <td>${percent(row.ctr)}</td>
+                <td>${row.avg_position == null ? "—" : Number(row.avg_position).toFixed(1)}</td>
+              </tr>
+            `
+          ).join("")
+        : '<tr><td colspan="7">No final GSC page rows in this period.</td></tr>';
+
+    const queries =
+      detail.top_queries || [];
+
+    $("searchQueriesBody").innerHTML =
+      queries.length
+        ? queries.map(
+            row => `
+              <tr>
+                <td>${safe(row.key || "(unavailable)")}</td>
+                <td>${number(row.impressions)}</td>
+                <td>${number(row.clicks)}</td>
+                <td>${percent(row.ctr)}</td>
+                <td>${row.position == null ? "—" : Number(row.position).toFixed(1)}</td>
+              </tr>
+            `
+          ).join("")
+        : '<tr><td colspan="5">No final GSC query rows in this period.</td></tr>';
+
+    const countries =
+      detail.countries || [];
+
+    $("searchCountriesBody").innerHTML =
+      countries.length
+        ? countries
+            .slice(0, 30)
+            .map(
+              row => {
+                const code =
+                  String(
+                    row.key || ""
+                  ).toLowerCase();
+
+                return `
+                  <tr>
+                    <td>${safe(COUNTRIES[code] || code.toUpperCase() || "Unknown")}</td>
+                    <td>${number(row.impressions)}</td>
+                    <td>${number(row.clicks)}</td>
+                    <td>${percent(row.ctr)}</td>
+                  </tr>
+                `;
+              }
+            ).join("")
+        : '<tr><td colspan="4">No country rows.</td></tr>';
+
+    const devices =
+      detail.devices || [];
+
+    $("searchDevicesBody").innerHTML =
+      devices.length
+        ? devices.map(
+            row => `
+              <tr>
+                <td>${safe(
+                  String(row.key || "Unknown")
+                    .replaceAll("_", " ")
+                    .replace(/\b\w/g, c => c.toUpperCase())
+                )}</td>
+                <td>${number(row.impressions)}</td>
+                <td>${number(row.clicks)}</td>
+                <td>${percent(row.ctr)}</td>
+              </tr>
+            `
+          ).join("")
+        : '<tr><td colspan="4">No device rows.</td></tr>';
+  }
+
+  async function load(
+    value,
     from = "",
     to = ""
   ) {
-    setLoading();
-
-    const params =
-      new URLSearchParams();
-
-    params.set(
-      "period",
-      period
-    );
+    let suffix =
+      `period=${encodeURIComponent(value)}`;
 
     if (
-      period === "custom" &&
+      value === "custom" &&
       from &&
       to
     ) {
-      params.set(
-        "from",
-        from
-      );
-
-      params.set(
-        "to",
-        to
-      );
+      suffix +=
+        `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
     }
 
     try {
-      const response =
-        await fetch(
-          `${API}?${params.toString()}`,
-          {
-            method: "GET",
-            credentials: "omit",
-            headers: {
-              Accept: "application/json"
-            }
-          }
-        );
+      const [
+        overviewResponse,
+        detailResponse
+      ] =
+        await Promise.all([
+          fetch(
+            `${OVERVIEW}?${suffix}`
+          ),
+          fetch(
+            `${DETAIL}?${suffix}`
+          )
+        ]);
 
-      if (!response.ok) {
-        throw new Error(
-          `HTTP ${response.status}`
-        );
-      }
+      const overview =
+        await overviewResponse.json();
 
-      const payload =
-        await response.json();
+      const detail =
+        await detailResponse.json();
 
       if (
-        !payload ||
-        payload.ok !== true ||
-        !payload.data
+        !overviewResponse.ok ||
+        !overview?.data
       ) {
         throw new Error(
-          "Invalid overview payload"
+          "overview failed"
         );
       }
 
-      renderAll(payload);
+      renderOverview(
+        overview
+      );
+
+      if (
+        detailResponse.ok &&
+        detail?.ok
+      ) {
+        renderDetail(
+          detail
+        );
+      } else {
+        detailUnavailable(
+          "Search detail data could not be loaded."
+        );
+      }
 
     } catch (error) {
-      showError(error);
+      console.error(
+        "Search Performance:",
+        error
+      );
     }
   }
 
@@ -976,39 +914,46 @@
       button.addEventListener(
         "click",
         () => {
-          const period =
+          const value =
             normalizePeriod(
               button.dataset.searchPeriod
             );
 
-          currentPeriod =
-            period;
+          period =
+            value;
 
           localStorage.setItem(
             "primadom-intelligence-detail-period",
-            period
+            value
           );
 
-          activateButton(period);
+          activate(
+            value
+          );
 
           if (
-            period === "custom"
+            value === "custom"
           ) {
-            showCustom(true);
+            showCustom(
+              true
+            );
+
             return;
           }
 
-          showCustom(false);
-          loadSearch(period);
+          showCustom(
+            false
+          );
+
+          load(
+            value
+          );
         }
       );
     });
 
-  const applyCustom =
-    $("searchApplyCustom");
-
-  if (applyCustom) {
-    applyCustom.addEventListener(
+  $("searchApplyCustom")
+    ?.addEventListener(
       "click",
       () => {
         const from =
@@ -1017,11 +962,14 @@
         const to =
           $("searchTo")?.value;
 
-        if (!from || !to) {
+        if (
+          !from ||
+          !to
+        ) {
           return;
         }
 
-        currentPeriod =
+        period =
           "custom";
 
         localStorage.setItem(
@@ -1039,28 +987,25 @@
           to
         );
 
-        activateButton(
+        activate(
           "custom"
         );
 
-        showCustom(true);
-
-        loadSearch(
+        load(
           "custom",
           from,
           to
         );
       }
     );
-  }
 
-  function initialLoad() {
-    activateButton(
-      currentPeriod
+  function initial() {
+    activate(
+      period
     );
 
     if (
-      currentPeriod === "custom"
+      period === "custom"
     ) {
       const from =
         localStorage.getItem(
@@ -1076,15 +1021,17 @@
         from &&
         to
       ) {
-        if ($("searchFrom"))
-          $("searchFrom").value = from;
+        $("searchFrom").value =
+          from;
 
-        if ($("searchTo"))
-          $("searchTo").value = to;
+        $("searchTo").value =
+          to;
 
-        showCustom(true);
+        showCustom(
+          true
+        );
 
-        loadSearch(
+        load(
           "custom",
           from,
           to
@@ -1093,7 +1040,7 @@
         return;
       }
 
-      currentPeriod =
+      period =
         "7d";
 
       localStorage.setItem(
@@ -1102,31 +1049,19 @@
       );
     }
 
-    activateButton(
-      currentPeriod
+    activate(
+      period
     );
 
-    showCustom(false);
+    showCustom(
+      false
+    );
 
-    loadSearch(
-      currentPeriod
+    load(
+      period
     );
   }
 
-  window.addEventListener(
-    "primadom:screenchange",
-    event => {
-      if (
-        event.detail?.screen ===
-        "search"
-      ) {
-        activateButton(
-          currentPeriod
-        );
-      }
-    }
-  );
-
-  initialLoad();
+  initial();
 
 })();
