@@ -3239,13 +3239,87 @@
   // START
   // ==========================================================
 
+  // ==========================================================
+  // PERSIST GLOBAL DASHBOARD PERIOD
+  // ==========================================================
+
+  const PERIOD_STORAGE_KEY =
+    "primadom_intelligence_period_v1";
+
+
+  document
+    .querySelectorAll(
+      ".period button"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const value =
+            button.dataset.period;
+
+          if (
+            [
+              "Today",
+              "7D",
+              "30D",
+              "90D"
+            ].includes(value)
+          ) {
+            try {
+              localStorage.setItem(
+                PERIOD_STORAGE_KEY,
+                value
+              );
+            } catch (_) {}
+          }
+        }
+      );
+    });
+
+
   initialLoadingState();
 
-  const activePeriod =
-    document.querySelector(
-      ".period button.active"
-    )?.dataset.period ||
+
+  let activePeriod =
     "7D";
+
+
+  try {
+    const storedPeriod =
+      localStorage.getItem(
+        PERIOD_STORAGE_KEY
+      );
+
+    if (
+      [
+        "Today",
+        "7D",
+        "30D",
+        "90D"
+      ].includes(storedPeriod)
+    ) {
+      activePeriod =
+        storedPeriod;
+    }
+  } catch (_) {}
+
+
+  document
+    .querySelectorAll(
+      ".period button"
+    )
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.period ===
+          activePeriod
+      );
+    });
+
 
   loadDashboard(
     periodKey(
