@@ -512,6 +512,16 @@ background-size:100% 48px, 78px 100%}
   }
 </style>
 
+
+<style id="search-detail-style">
+@media(max-width:1000px){
+  #search .search-two-column,
+  #search .search-summary-grid{
+    grid-template-columns:1fr !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1315,9 +1325,209 @@ background-size:100% 48px, 78px 100%}
 </section>
 
 <section class="screen" id="search">
-  <div class="detail-header"><div><h2>Search Performance</h2><p>Google Search Console visibility and lifecycle performance.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
-  <div class="detail-grid"><div class="detail-card">Impressions<b>320K</b><small class="up">↑ 12.1%</small></div><div class="detail-card">Clicks<b>4,980</b><small class="up">↑ 18.4%</small></div><div class="detail-card">CTR<b>1.56%</b><small class="up">↑ 0.08 pp</small></div><div class="detail-card">Average Position<b>18.4</b><small class="up">Improved 1.7</small></div></div>
-  <div class="detail-2"><div class="big-table"><h3>Top Search Pages</h3><table><tr><th>Page</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Position</th></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td>28,405</td><td>684</td><td>2.41%</td><td>8.7</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td>22,100</td><td>517</td><td>2.34%</td><td>9.2</td></tr><tr><td><a class="page-live-link" href="https://primadom.ai/en/developers/meydan-group/" target="_blank" rel="noopener">/en/developers/meydan-group/</a></td><td>15,991</td><td>268</td><td>1.68%</td><td>13.1</td></tr></table></div><div class="big-table"><h3>Lifecycle</h3><div class="bar-row"><span>Registered</span><div class="bar"><i style="width:96%;background:#14a36a"></i></div><b>96%</b></div><div class="bar-row"><span>Sitemap</span><div class="bar"><i style="width:93%;background:#14a36a"></i></div><b>93%</b></div><div class="bar-row"><span>Crawled</span><div class="bar"><i style="width:87%;background:#14a36a"></i></div><b>87%</b></div><div class="bar-row"><span>Search-visible</span><div class="bar"><i style="width:73%;background:#7b5be7"></i></div><b>73%</b></div></div></div>
+
+  <div class="detail-header">
+    <div>
+      <h2>Search Performance</h2>
+      <p>Google Search Console visibility and organic search performance.</p>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="period" id="searchPeriodControl">
+        <button data-search-period="today">Today</button>
+        <button class="active" data-search-period="7d">7D</button>
+        <button data-search-period="30d">30D</button>
+        <button data-search-period="90d">90D</button>
+        <button data-search-period="custom">Custom ◫</button>
+      </div>
+
+      <button class="view-link" data-jump="dashboard">← Dashboard</button>
+    </div>
+  </div>
+
+  <div
+    id="searchCustomRange"
+    style="
+      display:none;
+      justify-content:flex-end;
+      align-items:center;
+      gap:8px;
+      margin:-4px 0 16px;
+      flex-wrap:wrap
+    "
+  >
+    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+      From
+      <input
+        type="date"
+        id="searchFrom"
+        style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px"
+      >
+    </label>
+
+    <label style="font-size:11px;color:#6d7b91;font-weight:700">
+      To
+      <input
+        type="date"
+        id="searchTo"
+        style="margin-left:5px;padding:7px 9px;border:1px solid #dfe5ee;border-radius:8px"
+      >
+    </label>
+
+    <button class="view-link" id="searchApplyCustom">Apply</button>
+  </div>
+
+  <div class="detail-grid">
+
+    <div class="detail-card">
+      Impressions
+      <b id="searchImpressions">—</b>
+      <small id="searchImpressionsMeta">Google Search Console</small>
+    </div>
+
+    <div class="detail-card">
+      Clicks
+      <b id="searchClicks">—</b>
+      <small>Organic Google clicks</small>
+    </div>
+
+    <div class="detail-card">
+      CTR
+      <b id="searchCtr">—</b>
+      <small>Clicks ÷ impressions</small>
+    </div>
+
+    <div class="detail-card">
+      Average Position
+      <b id="searchPosition">—</b>
+      <small>Impression-weighted position</small>
+    </div>
+
+  </div>
+
+  <div
+    style="
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:16px;
+      margin-top:16px
+    "
+    class="search-summary-grid"
+  >
+    <div class="detail-card">
+      Search-visible Pages
+      <b id="searchVisiblePages">—</b>
+      <small>Pages with Google Search visibility</small>
+    </div>
+
+    <div class="detail-card">
+      GSC Data Through
+      <b id="searchLatestDate" style="font-size:24px">—</b>
+      <small id="searchFreshnessMeta">Final Google Search Console data</small>
+    </div>
+  </div>
+
+  <div
+    id="searchCoverageNotice"
+    style="
+      margin-top:16px;
+      padding:12px 15px;
+      border:1px solid #dfe5ee;
+      border-radius:12px;
+      background:#fff;
+      color:#68778e;
+      font-size:12px;
+      line-height:1.5
+    "
+  >
+    Loading Google Search Console coverage…
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <div class="panel-head">
+      <div>
+        <h3>Search Visibility Over Time</h3>
+        <p id="searchRangeLabel">Google impressions and clicks for selected period</p>
+      </div>
+    </div>
+
+    <div
+      id="searchVisibilityChart"
+      style="height:340px;padding:8px 4px 0"
+    >—</div>
+  </div>
+
+  <div
+    style="
+      display:grid;
+      grid-template-columns:minmax(0,1.45fr) minmax(340px,.55fr);
+      gap:16px;
+      margin-top:16px
+    "
+    class="search-two-column"
+  >
+
+    <div class="big-table" style="margin-top:0">
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:20px;
+        flex-wrap:wrap
+      ">
+        <div>
+          <h3 style="margin-bottom:4px">Search Performance by Language</h3>
+          <p style="margin:0;color:#77859a;font-size:12px">
+            Google Search Console · all 8 Primadom languages
+          </p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Impressions</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+
+        <tbody id="searchLanguagesBody">
+          <tr><td colspan="5">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="big-table" style="margin-top:0">
+      <h3>Search Visibility Context</h3>
+
+      <table>
+        <tbody id="searchContextBody">
+          <tr>
+            <td>Search-visible</td>
+            <td style="text-align:right"><b>—</b></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p
+        style="
+          margin:14px 0 0;
+          color:#77859a;
+          font-size:11px;
+          line-height:1.5
+        "
+      >
+        Indexed is an approximate Google Search Console snapshot.
+        Registered and Sitemap are Primadom network inventory context,
+        not period metrics.
+      </p>
+    </div>
+
+  </div>
+
 </section>
 
 <section class="screen" id="pages">
@@ -1643,5 +1853,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 </script>
 
 <script src="/assets/js/ai-bots-detail.js?v=20260924160139"></script>
+<script src="/assets/js/search-detail.js?v=20260924164512"></script>
 </body>
 </html>
