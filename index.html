@@ -1,36 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<script id="primadom-mobile-7d-bootstrap">
-(() => {
-  "use strict";
-
-  if (!window.matchMedia("(max-width:700px)").matches) {
-    return;
-  }
-
-  try {
-    /*
-     * Dashboard period.
-     */
-    localStorage.setItem(
-      "primadom_intelligence_period_v1",
-      "7d"
-    );
-
-    /*
-     * Shared detail-page period:
-     * Traffic / Bots / Search / Pages.
-     */
-    localStorage.setItem(
-      "primadom-intelligence-detail-period",
-      "7d"
-    );
-  } catch (_) {}
-})();
-</script>
-
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Primadom Intelligence — Interactive Preview</title>
@@ -4374,7 +4344,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 
   function applyMobileLayout() {
 
-    force7dVisual();
 
 
     /* ---------------- Crawler Registry ---------------- */
