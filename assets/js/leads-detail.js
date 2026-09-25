@@ -247,9 +247,70 @@
     }
 
 
+    function dateLabel(raw) {
+
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/
+          .test(raw)
+      ) {
+        return raw;
+      }
+
+      const date =
+        new Date(
+          `${raw}T00:00:00Z`
+        );
+
+      return date.toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "2-digit",
+          timeZone: "UTC"
+        }
+      );
+
+    }
+
+
+    const maxDateLabels =
+      rows.length <= 10
+        ? rows.length
+        : rows.length <= 35
+          ? 10
+          : 8;
+
+
+    const labelStep =
+      rows.length <= maxDateLabels
+        ? 1
+        : Math.ceil(
+            (rows.length - 1) /
+            (maxDateLabels - 1)
+          );
+
+
     const xLabels =
       rows.map(
         (row, index) => {
+
+          const isFirst =
+            index === 0;
+
+          const isLast =
+            index ===
+            rows.length - 1;
+
+          const shouldShow =
+            isFirst ||
+            isLast ||
+            index % labelStep === 0;
+
+
+          if (!shouldShow) {
+            return "";
+          }
+
 
           const raw =
             row.data_date ||
@@ -257,33 +318,20 @@
             row.day ||
             "";
 
-          let label =
-            raw;
-
-          if (
-            /^\d{4}-\d{2}-\d{2}$/
-              .test(raw)
-          ) {
-
-            const [
-              year,
-              month,
-              day
-            ] =
-              raw.split("-");
-
-            label =
-              `${month}/${day}`;
-
-          }
 
           return `
             <text
               class="leads-chart-axis"
               x="${xFor(index)}"
               y="${height - 16}"
-              text-anchor="middle"
-            >${label}</text>
+              text-anchor="${
+                isFirst
+                  ? "start"
+                  : isLast
+                    ? "end"
+                    : "middle"
+              }"
+            >${dateLabel(raw)}</text>
           `;
         }
       )
@@ -292,21 +340,41 @@
 
     const dots =
       points.map(
-        point => `
-          <circle
-            class="leads-chart-dot"
-            cx="${point.x}"
-            cy="${point.y}"
-            r="5"
-          />
+        point => {
 
-          <text
-            class="leads-chart-value"
-            x="${point.x}"
-            y="${point.y - 12}"
-            text-anchor="middle"
-          >${point.value}</text>
-        `
+          const valueLabel =
+            point.value > 0
+              ? `
+                <text
+                  class="leads-chart-value"
+                  x="${point.x}"
+                  y="${point.y - 12}"
+                  text-anchor="middle"
+                >${point.value}</text>
+              `
+              : "";
+
+
+          const dot =
+            point.value > 0 ||
+            rows.length <= 10
+              ? `
+                <circle
+                  class="leads-chart-dot"
+                  cx="${point.x}"
+                  cy="${point.y}"
+                  r="5"
+                />
+              `
+              : "";
+
+
+          return `
+            ${dot}
+            ${valueLabel}
+          `;
+
+        }
       )
       .join("");
 
