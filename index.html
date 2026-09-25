@@ -928,6 +928,108 @@ background-size:100% 48px, 78px 100%}
 
 </style>
 
+
+<style id="leads-v1-polish">
+
+#leads .leads-period-switch{
+  display:flex;
+  align-items:center;
+  gap:2px;
+  padding:4px;
+  background:#fff;
+  border:1px solid #e1e7ef;
+  border-radius:12px;
+  box-shadow:0 4px 18px rgba(24,44,74,.04);
+}
+
+#leads .leads-period-switch button{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:#506078;
+  min-height:34px;
+  padding:0 13px;
+  border-radius:9px;
+  font-family:inherit;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  cursor:pointer;
+}
+
+#leads .leads-period-switch button:hover{
+  background:#f3f6fa;
+}
+
+#leads .leads-period-switch button.active{
+  background:#102544;
+  color:#fff;
+  box-shadow:0 2px 7px rgba(16,37,68,.16);
+}
+
+#leads .leads-chart-card{
+  margin-top:18px;
+}
+
+#leads #leadsChart{
+  min-height:300px;
+  width:100%;
+  padding:12px 4px 0;
+}
+
+#leads .leads-chart-empty{
+  min-height:260px;
+  display:grid;
+  place-items:center;
+  color:#71809a;
+  font-size:13px;
+}
+
+#leads .leads-chart-svg{
+  width:100%;
+  height:auto;
+  display:block;
+  overflow:visible;
+}
+
+#leads .leads-chart-grid{
+  stroke:#e8edf3;
+  stroke-width:1;
+}
+
+#leads .leads-chart-axis{
+  fill:#7b889d;
+  font-size:11px;
+  font-family:inherit;
+}
+
+#leads .leads-chart-line{
+  fill:none;
+  stroke:#2d6cdf;
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+#leads .leads-chart-area{
+  fill:rgba(45,108,223,.08);
+}
+
+#leads .leads-chart-dot{
+  fill:#fff;
+  stroke:#2d6cdf;
+  stroke-width:3;
+}
+
+#leads .leads-chart-value{
+  fill:#203754;
+  font-size:11px;
+  font-weight:700;
+  font-family:inherit;
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2518,11 +2620,12 @@ background-size:100% 48px, 78px 100%}
   </div>
 
 
-  <div class="big-table" style="margin-top:18px">
+
+  <div class="big-table leads-chart-card">
 
     <div class="panel-head">
       <div class="head-left">
-        <h3>Lead Attribution</h3>
+        <h3>Leads Over Time</h3>
       </div>
 
       <span class="ai-tag" id="leadsRangeLabel">
@@ -2530,32 +2633,17 @@ background-size:100% 48px, 78px 100%}
       </span>
     </div>
 
-    <div
-      style="
-        min-height:150px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
-        padding:28px;
-        color:var(--muted);
-      "
-    >
-      <div>
-        <b
-          style="
-            display:block;
-            color:var(--ink);
-            font-size:16px;
-            margin-bottom:6px;
-          "
-        >
-          Lead source data will appear after CRM integration
-        </b>
+    <p style="
+      margin:-4px 0 6px;
+      color:var(--muted);
+      font-size:12px;
+    ">
+      Confirmed first-party leads by selected period.
+    </p>
 
-        <span style="font-size:12px">
-          Current Intelligence tracks confirmed lead volume and conversion only.
-        </span>
+    <div id="leadsChart">
+      <div class="leads-chart-empty">
+        Loading…
       </div>
     </div>
 
@@ -2770,6 +2858,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 <script src="/assets/js/ai-bots-detail.js?v=20260924193234"></script>
 <script src="/assets/js/search-detail.js?v=20260924194454"></script>
 <script src="/assets/js/pages-detail.js?v=20260924204313"></script>
-<script src="/assets/js/leads-detail.js?v=20260925085227"></script>
+<script src="/assets/js/leads-detail.js?v=20260925090325"></script>
 </body>
 </html>
