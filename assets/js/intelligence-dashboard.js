@@ -1952,12 +1952,27 @@
       return;
     }
 
-    const raw =
+    const hourlyRaw =
       Array.isArray(
-        data.traffic_daily
+        data.traffic_hourly
       )
-        ? data.traffic_daily
+        ? data.traffic_hourly
         : [];
+
+    const usingHourly =
+      range?.period === "today" &&
+      hourlyRaw.length > 0;
+
+    const raw =
+      usingHourly
+        ? hourlyRaw
+        : (
+            Array.isArray(
+              data.traffic_daily
+            )
+              ? data.traffic_daily
+              : []
+          );
 
     const requestedDays =
       Number(
@@ -1972,10 +1987,12 @@
         : "Daily";
 
     const rows =
-      aggregateTraffic(
-        raw,
-        effectiveGranularity
-      );
+      usingHourly
+        ? raw
+        : aggregateTraffic(
+            raw,
+            effectiveGranularity
+          );
 
     if (!rows.length) {
       svg.innerHTML = "";
@@ -2838,11 +2855,77 @@ function renderDashboard(
       range
     );
 
+    renderTodayHourLabels(
+      data,
+      range
+    );
+
     document.documentElement
       .dataset
       .intelligenceStatus =
         "live";
   }
+
+
+  function renderTodayHourLabels(
+    data,
+    range
+  ) {
+    if (
+      range?.period !== "today" ||
+      !Array.isArray(
+        data.traffic_hourly
+      ) ||
+      !data.traffic_hourly.length
+    ) {
+      return;
+    }
+
+    const panel =
+      findPanel(
+        "Traffic & Visibility Overview"
+      );
+
+    const dates =
+      panel?.querySelector(
+        ".chart-dates"
+      );
+
+    if (!dates) {
+      return;
+    }
+
+    const rows =
+      data.traffic_hourly;
+
+    const step =
+      rows.length > 12
+        ? 3
+        : rows.length > 8
+          ? 2
+          : 1;
+
+    dates.innerHTML =
+      rows
+        .map((row, index) => {
+          if (
+            index % step !== 0 &&
+            index !== rows.length - 1
+          ) {
+            return "";
+          }
+
+          const label =
+            escapeHtml(
+              row.bucket_label || ""
+            );
+
+          return `<span>${label}</span>`;
+        })
+        .filter(Boolean)
+        .join("");
+  }
+
 
 
   // ==========================================================

@@ -247,9 +247,20 @@
     if (!root) return;
 
     const rows =
-      Array.isArray(data.traffic_daily)
-        ? data.traffic_daily
-        : [];
+      (
+        Array.isArray(
+          data.traffic_hourly
+        ) &&
+        data.traffic_hourly.length
+      )
+        ? data.traffic_hourly
+        : (
+            Array.isArray(
+              data.traffic_daily
+            )
+              ? data.traffic_daily
+              : []
+          );
 
     if (!rows.length) {
       root.innerHTML =
@@ -362,12 +373,19 @@
       ) return "";
 
       const raw =
+        row.bucket_label ||
         row.date ||
         row.day ||
         row.metric_date ||
+        row.data_date ||
         "";
 
-      const text = String(raw).slice(5);
+      const text =
+        row.bucket_label
+          ? String(
+              row.bucket_label
+            )
+          : String(raw).slice(5);
 
       return `
         <text
@@ -396,9 +414,11 @@
 
       const dots = points.map(p => {
         const date =
+          p.row.bucket_label ||
           p.row.date ||
           p.row.day ||
           p.row.metric_date ||
+          p.row.data_date ||
           "";
 
         return `
