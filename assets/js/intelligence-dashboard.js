@@ -3724,4 +3724,4 @@ function renderDashboard(
   }
 
 
-})();\n
+})();
