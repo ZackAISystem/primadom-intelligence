@@ -909,7 +909,18 @@
       return;
     }
 
+    const header = `
+      <div class="source-row source-row-head">
+        <span class="source-head-source">Source</span>
+        <span>Channel</span>
+        <span>Sessions</span>
+        <span>Leads</span>
+      </div>
+    `;
+
+
     container.innerHTML =
+      header +
       rows
         .slice(0, 10)
         .map((row, index) => {
@@ -942,12 +953,12 @@
               </span>
 
               <b>${num(
-                row.visitors
+                row.sessions
               )}</b>
 
-              <span class="mini-trend">
-                —
-              </span>
+              <b class="source-leads">${num(
+                row.leads
+              )}</b>
             </div>
           `;
         })
@@ -3713,4 +3724,4 @@ function renderDashboard(
   }
 
 
-})();
+})();\n

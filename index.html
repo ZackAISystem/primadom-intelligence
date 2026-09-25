@@ -1030,6 +1030,46 @@ background-size:100% 48px, 78px 100%}
 
 </style>
 
+
+<style id="dashboard-source-column-headings">
+
+#dashboard .source-row-head{
+  cursor:default;
+  color:#7a8698;
+  font-size:9px;
+  font-weight:700;
+  padding:2px 1px 6px;
+  border-bottom:1px solid #e8edf3;
+}
+
+#dashboard .source-row-head:hover{
+  background:transparent;
+}
+
+#dashboard .source-row-head .source-head-source{
+  grid-column:1 / 4;
+}
+
+#dashboard .source-row-head > span:not(.source-head-source){
+  text-align:left;
+}
+
+#dashboard .source-leads{
+  font-weight:700;
+}
+
+@media(max-width:650px){
+  #dashboard .source-row-head{
+    display:none;
+  }
+
+  #dashboard .source-leads{
+    display:none;
+  }
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2754,7 +2794,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 })();
 </script>
 
-<script src="/assets/js/intelligence-dashboard.js?v=20260924-countries3"></script>
+<script src="/assets/js/intelligence-dashboard.js?v=20260925092140"></script>
 
   <script src="/assets/js/traffic-detail.js?v=1790252823"></script>
 
