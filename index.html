@@ -862,6 +862,72 @@ background-size:100% 48px, 78px 100%}
 }
 </style>
 
+
+<style id="pages-balanced-columns">
+
+#pages table{
+  width:100%;
+  table-layout:fixed;
+}
+
+#pages table th:nth-child(1),
+#pages table td:nth-child(1){
+  width:28%;
+}
+
+#pages table th:nth-child(2),
+#pages table td:nth-child(2){
+  width:9%;
+}
+
+#pages table th:nth-child(3),
+#pages table td:nth-child(3){
+  width:5%;
+}
+
+/* Lifecycle is intentionally hidden */
+#pages table th:nth-child(4),
+#pages table td:nth-child(4){
+  display:none !important;
+}
+
+#pages table th:nth-child(5),
+#pages table td:nth-child(5){
+  width:7%;
+}
+
+#pages table th:nth-child(6),
+#pages table td:nth-child(6){
+  width:7%;
+}
+
+#pages table th:nth-child(7),
+#pages table td:nth-child(7){
+  width:7%;
+}
+
+#pages table th:nth-child(8),
+#pages table td:nth-child(8){
+  width:9%;
+}
+
+#pages table th:nth-child(9),
+#pages table td:nth-child(9){
+  width:8%;
+}
+
+#pages table th:nth-child(10),
+#pages table td:nth-child(10){
+  width:8%;
+}
+
+#pages table th:nth-child(11),
+#pages table td:nth-child(11){
+  width:12%;
+}
+
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -2381,11 +2447,122 @@ background-size:100% 48px, 78px 100%}
 
 </section>
 
+
 <section class="screen" id="leads">
-  <div class="detail-header"><div><h2>Leads & Conversions</h2><p>Lead source, page, language and conversion intelligence. CRM stages can plug in later.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
-  <div class="detail-grid"><div class="detail-card">Leads<b>17</b><small class="up">↑ 41.7%</small></div><div class="detail-card">Conversion Rate<b>2.1%</b><small>Visitor → lead</small></div><div class="detail-card">LLM Leads<b>9</b><small>ChatGPT / Perplexity / Claude</small></div><div class="detail-card">CRM Sync<b>Pending</b><small>LeadSquared extension</small></div></div>
-  <div class="big-table"><h3>Recent Leads</h3><table><tr><th>Created</th><th>Source</th><th>Page</th><th>Language</th><th>Country</th><th>Status</th></tr><tr><td>09:42</td><td>ChatGPT</td><td><a class="page-live-link" href="https://primadom.ai/en/projects/passo/" target="_blank" rel="noopener">/en/projects/passo/</a></td><td>EN</td><td>AE</td><td>New</td></tr><tr><td>08:18</td><td>Google Organic</td><td><a class="page-live-link" href="https://primadom.ai/en/areas/dubai-islands/" target="_blank" rel="noopener">/en/areas/dubai-islands/</a></td><td>EN</td><td>GB</td><td>New</td></tr><tr><td>Yesterday</td><td>Perplexity</td><td><a class="page-live-link" href="https://primadom.ai/en/projects/armani-beach-residences/" target="_blank" rel="noopener">/en/projects/armani-beach-residences/</a></td><td>EN</td><td>US</td><td>New</td></tr></table></div>
+
+  <div class="detail-header">
+    <div>
+      <h2>Leads &amp; Conversions</h2>
+      <p>Confirmed first-party leads and visitor-to-lead conversion.</p>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+
+      <div class="period-switch leads-period-switch">
+        <button data-leads-period="today">Today</button>
+        <button data-leads-period="7d" class="active">7D</button>
+        <button data-leads-period="30d">30D</button>
+        <button data-leads-period="90d">90D</button>
+        <button data-leads-period="custom">Custom</button>
+      </div>
+
+      <button class="view-link" data-jump="dashboard">← Dashboard</button>
+
+    </div>
+  </div>
+
+
+  <div
+    id="leadsCustomRange"
+    style="
+      display:none;
+      margin:0 0 16px;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap
+    "
+  >
+    <input type="date" id="leadsFrom">
+    <span>→</span>
+    <input type="date" id="leadsTo">
+    <button class="view-link" id="leadsApplyCustom">Apply</button>
+  </div>
+
+
+  <div class="detail-grid">
+
+    <div class="detail-card">
+      Leads
+      <b id="leadsTotal">—</b>
+      <small>Confirmed first-party leads</small>
+    </div>
+
+    <div class="detail-card">
+      Conversion Rate
+      <b id="leadsConversion">—</b>
+      <small>Visitor → lead</small>
+    </div>
+
+    <div class="detail-card">
+      Lead Source
+      <b style="font-size:22px">CRM pending</b>
+      <small>Source attribution will appear after CRM sync</small>
+    </div>
+
+    <div class="detail-card">
+      CRM Sync
+      <b style="font-size:22px">Pending</b>
+      <small>LeadSquared integration later</small>
+    </div>
+
+  </div>
+
+
+  <div class="big-table" style="margin-top:18px">
+
+    <div class="panel-head">
+      <div class="head-left">
+        <h3>Lead Attribution</h3>
+      </div>
+
+      <span class="ai-tag" id="leadsRangeLabel">
+        Selected period
+      </span>
+    </div>
+
+    <div
+      style="
+        min-height:150px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        padding:28px;
+        color:var(--muted);
+      "
+    >
+      <div>
+        <b
+          style="
+            display:block;
+            color:var(--ink);
+            font-size:16px;
+            margin-bottom:6px;
+          "
+        >
+          Lead source data will appear after CRM integration
+        </b>
+
+        <span style="font-size:12px">
+          Current Intelligence tracks confirmed lead volume and conversion only.
+        </span>
+      </div>
+    </div>
+
+  </div>
+
 </section>
+
 
 <section class="screen" id="reports">
   <div class="detail-header"><div><h2>Reports</h2><p>Executive reporting and period snapshots.</p></div><button class="view-link" data-jump="dashboard">← Dashboard</button></div>
@@ -2593,5 +2770,6 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 <script src="/assets/js/ai-bots-detail.js?v=20260924193234"></script>
 <script src="/assets/js/search-detail.js?v=20260924194454"></script>
 <script src="/assets/js/pages-detail.js?v=20260924204313"></script>
+<script src="/assets/js/leads-detail.js?v=20260925085227"></script>
 </body>
 </html>
