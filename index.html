@@ -3700,20 +3700,30 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 (() => {
   "use strict";
 
-  /*
-   * Global product rule:
-   * every fresh Intelligence page load starts at 7D.
-   * User may still switch period normally after load.
-   */
-  localStorage.setItem(
-    "primadom_intelligence_period_v1",
-    "7d"
-  );
+  const dashboardKey =
+    "primadom_intelligence_period_v1";
 
-  localStorage.setItem(
-    "primadom-intelligence-detail-period",
-    "7d"
-  );
+  const detailKey =
+    "primadom-intelligence-detail-period";
+
+  /*
+   * 7D is DEFAULT only on the very first visit.
+   * After the user selects Today / 30D / 90D / Custom,
+   * that selection survives reload.
+   */
+  if (!localStorage.getItem(dashboardKey)) {
+    localStorage.setItem(
+      dashboardKey,
+      "7d"
+    );
+  }
+
+  if (!localStorage.getItem(detailKey)) {
+    localStorage.setItem(
+      detailKey,
+      "7d"
+    );
+  }
 })();
 </script>
 
