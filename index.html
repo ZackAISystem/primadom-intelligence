@@ -1,6 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script id="primadom-mobile-7d-bootstrap">
+(() => {
+  "use strict";
+
+  if (!window.matchMedia("(max-width:700px)").matches) {
+    return;
+  }
+
+  try {
+    /*
+     * Dashboard period.
+     */
+    localStorage.setItem(
+      "primadom_intelligence_period_v1",
+      "7d"
+    );
+
+    /*
+     * Shared detail-page period:
+     * Traffic / Bots / Search / Pages.
+     */
+    localStorage.setItem(
+      "primadom-intelligence-detail-period",
+      "7d"
+    );
+  } catch (_) {}
+})();
+</script>
+
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Primadom Intelligence — Interactive Preview</title>
@@ -1546,6 +1576,401 @@ background-size:100% 48px, 78px 100%}
       height:225px !important;
     }
 
+  }
+
+}
+
+</style>
+
+
+<style id="primadom-mobile-v2">
+
+@media (max-width:700px){
+
+
+  /* ========================================================
+     PERIOD CONTROLS
+     ======================================================== */
+
+  .period{
+    max-width:100% !important;
+  }
+
+  .period button{
+    min-width:50px;
+  }
+
+
+  /* ========================================================
+     TRAFFIC & ANALYTICS — FIX CHART CROPPING
+     ======================================================== */
+
+  #trafficDetailChart{
+    width:100% !important;
+
+    height:auto !important;
+    min-height:0 !important;
+
+    overflow:visible !important;
+
+    padding:0 !important;
+
+    box-sizing:border-box;
+  }
+
+  #trafficDetailChart > div{
+    width:100% !important;
+
+    height:auto !important;
+    min-height:0 !important;
+
+    overflow:visible !important;
+  }
+
+  #trafficDetailChart svg{
+    position:static !important;
+
+    display:block !important;
+
+    width:100% !important;
+    max-width:100% !important;
+
+    height:240px !important;
+    max-height:240px !important;
+
+    margin:0 !important;
+  }
+
+
+  /*
+   * Traffic header/legend remains readable
+   * without taking half the card.
+   */
+  #traffic .panel-head{
+    gap:8px;
+  }
+
+  #trafficDetailChart > div > div:first-child{
+    gap:8px !important;
+    padding:
+      2px
+      2px
+      8px
+      !important;
+  }
+
+
+  /* ========================================================
+     CRAWLER REGISTRY
+     MOBILE = 4 USEFUL COLUMNS
+     ======================================================== */
+
+  .mobile-crawler-registry{
+    overflow:hidden !important;
+  }
+
+  .mobile-crawler-registry table{
+    width:100% !important;
+
+    min-width:0 !important;
+
+    table-layout:fixed !important;
+
+    font-size:10px !important;
+  }
+
+  .mobile-crawler-registry
+  th:not([data-mobile-keep="1"]),
+
+  .mobile-crawler-registry
+  td:not([data-mobile-keep="1"]){
+    display:none !important;
+  }
+
+  .mobile-crawler-registry th,
+  .mobile-crawler-registry td{
+    padding:
+      8px
+      5px
+      !important;
+
+    white-space:normal !important;
+
+    overflow-wrap:anywhere;
+    word-break:normal;
+
+    vertical-align:middle;
+  }
+
+  .mobile-crawler-registry
+  [data-mobile-primary="1"]{
+    width:32% !important;
+  }
+
+
+  /* ========================================================
+     SEARCH PERFORMANCE — CHART
+     ======================================================== */
+
+  .mobile-search-chart{
+    overflow:hidden !important;
+  }
+
+  .mobile-search-chart
+  .mobile-chart-stage{
+    width:100% !important;
+
+    min-width:0 !important;
+
+    height:auto !important;
+    min-height:0 !important;
+
+    overflow:visible !important;
+  }
+
+  .mobile-search-chart svg{
+    position:static !important;
+
+    display:block !important;
+
+    width:100% !important;
+    max-width:100% !important;
+
+    height:270px !important;
+    max-height:270px !important;
+
+    margin:0 auto !important;
+  }
+
+  .mobile-search-chart .legend{
+    justify-content:flex-start !important;
+
+    gap:
+      8px
+      14px
+      !important;
+
+    margin-bottom:8px !important;
+  }
+
+
+  /* ========================================================
+     TOP SEARCH PAGES
+     Page / Type / Impressions / Clicks only
+     ======================================================== */
+
+  .mobile-search-pages{
+    overflow:hidden !important;
+  }
+
+  .mobile-search-pages table{
+    width:100% !important;
+
+    min-width:0 !important;
+
+    table-layout:fixed !important;
+
+    font-size:10px !important;
+  }
+
+  .mobile-search-pages
+  th:not([data-mobile-keep="1"]),
+
+  .mobile-search-pages
+  td:not([data-mobile-keep="1"]){
+    display:none !important;
+  }
+
+  .mobile-search-pages th,
+  .mobile-search-pages td{
+    padding:
+      9px
+      5px
+      !important;
+
+    white-space:normal !important;
+
+    overflow-wrap:anywhere;
+  }
+
+  .mobile-search-pages
+  [data-mobile-primary="1"]{
+    width:43% !important;
+  }
+
+  .mobile-search-pages
+  a{
+    white-space:normal !important;
+
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+
+  /* ========================================================
+     PAGES & CONTENT — PAGE NETWORK
+     Convert desktop BI table into mobile cards.
+     ======================================================== */
+
+  .mobile-page-network{
+    overflow:visible !important;
+  }
+
+  .mobile-page-network table,
+  .mobile-page-network tbody{
+    display:block !important;
+
+    width:100% !important;
+
+    min-width:0 !important;
+  }
+
+  .mobile-page-network thead{
+    display:none !important;
+  }
+
+  .mobile-page-network tbody tr{
+    display:grid !important;
+
+    grid-template-columns:
+      minmax(0,1fr)
+      minmax(0,1fr)
+      !important;
+
+    gap:
+      8px
+      10px
+      !important;
+
+    width:100% !important;
+
+    margin:
+      0
+      0
+      10px
+      !important;
+
+    padding:
+      12px
+      !important;
+
+    box-sizing:border-box;
+
+    border:
+      1px
+      solid
+      var(--line);
+
+    border-radius:12px;
+
+    background:#fff;
+  }
+
+
+  .mobile-page-network
+  td:not([data-mobile-keep="1"]){
+    display:none !important;
+  }
+
+
+  .mobile-page-network
+  td[data-mobile-keep="1"]{
+    display:block !important;
+
+    min-width:0;
+
+    padding:0 !important;
+
+    border:0 !important;
+
+    font-size:11px !important;
+
+    overflow-wrap:anywhere;
+  }
+
+
+  /*
+   * URL = full first row
+   */
+  .mobile-page-network
+  td[data-mobile-primary="1"]{
+    grid-column:1 / -1;
+
+    padding-bottom:8px !important;
+
+    margin-bottom:2px;
+
+    border-bottom:
+      1px
+      solid
+      #edf1f5
+      !important;
+
+    font-size:12px !important;
+    font-weight:700 !important;
+    line-height:1.35;
+  }
+
+
+  /*
+   * Label above each metric:
+   * Visitors / Leads / GSC / AI / etc.
+   */
+  .mobile-page-network
+  td[data-mobile-keep="1"]:not(
+    [data-mobile-primary="1"]
+  )::before{
+
+    content:
+      attr(data-mobile-label);
+
+    display:block;
+
+    margin-bottom:2px;
+
+    color:var(--muted);
+
+    font-size:8px;
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.03em;
+  }
+
+
+  .mobile-page-network
+  a{
+    white-space:normal !important;
+
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+
+  /* ========================================================
+     GENERIC MOBILE TABLE SAFETY
+     ======================================================== */
+
+  #bots,
+  #search,
+  #pages{
+    min-width:0 !important;
+  }
+
+  #bots .big-table,
+  #search .big-table,
+  #pages .big-table{
+    max-width:100% !important;
+  }
+
+
+  /* Detail headers should never push the viewport */
+  #traffic .detail-header,
+  #bots .detail-header,
+  #search .detail-header,
+  #pages .detail-header{
+    min-width:0 !important;
   }
 
 }
@@ -3518,6 +3943,570 @@ document.querySelectorAll('.page-live-link').forEach(link => {
         closeMenu();
       }
 
+    }
+  );
+
+})();
+</script>
+
+
+<script id="primadom-mobile-v2-runtime">
+(() => {
+  "use strict";
+
+  const mobile =
+    window.matchMedia(
+      "(max-width:700px)"
+    );
+
+  if (!mobile.matches) {
+    return;
+  }
+
+
+  /* ========================================================
+     PERIOD VISUAL STATE
+     ======================================================== */
+
+  function force7dVisual() {
+
+    const groups = [
+      [
+        "[data-period]",
+        "data-period"
+      ],
+      [
+        "[data-traffic-period]",
+        "data-traffic-period"
+      ],
+      [
+        "[data-bot-period]",
+        "data-bot-period"
+      ],
+      [
+        "[data-search-period]",
+        "data-search-period"
+      ],
+      [
+        "[data-pages-period]",
+        "data-pages-period"
+      ],
+      [
+        "[data-leads-period]",
+        "data-leads-period"
+      ]
+    ];
+
+
+    groups.forEach(
+      ([selector, attr]) => {
+
+        document
+          .querySelectorAll(selector)
+          .forEach(button => {
+
+            const value =
+              String(
+                button.getAttribute(
+                  attr
+                ) || ""
+              )
+              .trim()
+              .toLowerCase();
+
+
+            button.classList.toggle(
+              "active",
+              value === "7d"
+            );
+
+          });
+
+      }
+    );
+
+  }
+
+
+  /* ========================================================
+     HELPERS
+     ======================================================== */
+
+  function normal(value) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+  }
+
+
+  function findCardByTitle(title) {
+
+    const wanted =
+      normal(title);
+
+
+    return Array.from(
+      document.querySelectorAll(
+        ".panel, .big-table"
+      )
+    )
+    .find(card => {
+
+      const heading =
+        card.querySelector(
+          "h2, h3"
+        );
+
+      return heading &&
+        normal(
+          heading.textContent
+        ) === wanted;
+
+    }) || null;
+
+  }
+
+
+  /* ========================================================
+     TABLE COMPACTOR
+     ======================================================== */
+
+  function configureTable(
+    card,
+    className,
+    keepTest,
+    primaryTest
+  ) {
+
+    if (!card) {
+      return;
+    }
+
+
+    card.classList.add(
+      className
+    );
+
+
+    const table =
+      card.querySelector(
+        "table"
+      );
+
+    if (!table) {
+      return;
+    }
+
+
+    function apply() {
+
+      const headers =
+        Array.from(
+          table.querySelectorAll(
+            "thead th"
+          )
+        );
+
+
+      /*
+       * Fallback for tables without explicit thead.
+       */
+      const headerCells =
+        headers.length
+          ? headers
+          : Array.from(
+              table.querySelectorAll(
+                "tr:first-child th"
+              )
+            );
+
+
+      if (!headerCells.length) {
+        return;
+      }
+
+
+      const labels =
+        headerCells.map(
+          cell =>
+            String(
+              cell.textContent || ""
+            ).trim()
+        );
+
+
+      let keepCount = 0;
+
+
+      headerCells.forEach(
+        (cell, index) => {
+
+          const label =
+            labels[index] || "";
+
+          const keep =
+            keepTest(
+              normal(label)
+            );
+
+          if (keep) {
+            keepCount += 1;
+
+            cell.dataset.mobileKeep =
+              "1";
+          } else {
+            delete cell.dataset.mobileKeep;
+          }
+
+
+          if (
+            primaryTest(
+              normal(label)
+            )
+          ) {
+            cell.dataset.mobilePrimary =
+              "1";
+          } else {
+            delete cell.dataset.mobilePrimary;
+          }
+
+        }
+      );
+
+
+      /*
+       * Safety:
+       * never activate compact mode if header detection failed.
+       */
+      if (keepCount < 2) {
+        card.classList.remove(
+          className
+        );
+        return;
+      }
+
+
+      const bodyRows =
+        Array.from(
+          table.querySelectorAll(
+            "tbody tr"
+          )
+        );
+
+
+      bodyRows.forEach(row => {
+
+        Array.from(
+          row.children
+        )
+        .forEach(
+          (cell, index) => {
+
+            const label =
+              labels[index] || "";
+
+            const normalized =
+              normal(label);
+
+            const keep =
+              keepTest(
+                normalized
+              );
+
+
+            cell.dataset.mobileLabel =
+              label;
+
+
+            if (keep) {
+              cell.dataset.mobileKeep =
+                "1";
+            } else {
+              delete cell.dataset.mobileKeep;
+            }
+
+
+            if (
+              primaryTest(
+                normalized
+              )
+            ) {
+              cell.dataset.mobilePrimary =
+                "1";
+            } else {
+              delete cell.dataset.mobilePrimary;
+            }
+
+          }
+        );
+
+      });
+
+    }
+
+
+    apply();
+
+
+    const tbody =
+      table.querySelector(
+        "tbody"
+      );
+
+
+    if (
+      tbody &&
+      !tbody.dataset.mobileObserved
+    ) {
+
+      tbody.dataset.mobileObserved =
+        "1";
+
+
+      new MutationObserver(
+        apply
+      )
+      .observe(
+        tbody,
+        {
+          childList:true,
+          subtree:true
+        }
+      );
+
+    }
+
+  }
+
+
+  /* ========================================================
+     CHART FIXER
+     ======================================================== */
+
+  function configureChart(
+    card,
+    className
+  ) {
+
+    if (!card) {
+      return;
+    }
+
+
+    card.classList.add(
+      className
+    );
+
+
+    function fix() {
+
+      card
+        .querySelectorAll(
+          "svg"
+        )
+        .forEach(svg => {
+
+          svg.setAttribute(
+            "preserveAspectRatio",
+            "xMidYMid meet"
+          );
+
+
+          const parent =
+            svg.parentElement;
+
+          if (parent) {
+            parent.classList.add(
+              "mobile-chart-stage"
+            );
+          }
+
+        });
+
+    }
+
+
+    fix();
+
+
+    if (
+      !card.dataset.mobileChartObserved
+    ) {
+
+      card.dataset.mobileChartObserved =
+        "1";
+
+
+      new MutationObserver(
+        fix
+      )
+      .observe(
+        card,
+        {
+          childList:true,
+          subtree:true
+        }
+      );
+
+    }
+
+  }
+
+
+  /* ========================================================
+     APPLY
+     ======================================================== */
+
+  function applyMobileLayout() {
+
+    force7dVisual();
+
+
+    /* ---------------- Crawler Registry ---------------- */
+
+    configureTable(
+      findCardByTitle(
+        "Crawler Registry"
+      ),
+
+      "mobile-crawler-registry",
+
+      label =>
+        label === "crawler" ||
+        label === "purpose" ||
+        label === "requests" ||
+        label === "pages",
+
+      label =>
+        label === "crawler"
+    );
+
+
+    /* ---------------- Top Search Pages ---------------- */
+
+    configureTable(
+      findCardByTitle(
+        "Top Search Pages"
+      ),
+
+      "mobile-search-pages",
+
+      label =>
+        label === "page" ||
+        label === "type" ||
+        label === "impressions" ||
+        label === "clicks",
+
+      label =>
+        label === "page"
+    );
+
+
+    /* ---------------- Page Network ---------------- */
+
+    configureTable(
+      findCardByTitle(
+        "Page Network"
+      ),
+
+      "mobile-page-network",
+
+      label =>
+        label === "page" ||
+        label === "type" ||
+        label === "visitors" ||
+        label === "leads" ||
+        label.includes(
+          "google impressions"
+        ) ||
+        label.includes(
+          "gsc impr"
+        ) ||
+        (
+          label.includes("ai") &&
+          (
+            label.includes("crawl") ||
+            label.includes("request")
+          )
+        ) ||
+        label.includes(
+          "last activity"
+        ),
+
+      label =>
+        label === "page"
+    );
+
+
+    /* ---------------- Search graph ---------------- */
+
+    configureChart(
+      findCardByTitle(
+        "Search Visibility Over Time"
+      ),
+
+      "mobile-search-chart"
+    );
+
+
+    /*
+     * Traffic Overview is rendered inside a detail chart root.
+     * Its panel heading can be Traffic Overview.
+     */
+    configureChart(
+      findCardByTitle(
+        "Traffic Overview"
+      ),
+
+      "mobile-traffic-chart"
+    );
+
+  }
+
+
+  /*
+   * DOM exists already because this script is at the bottom,
+   * but run again on the next frame after dynamic modules start.
+   */
+  applyMobileLayout();
+
+
+  requestAnimationFrame(
+    applyMobileLayout
+  );
+
+
+  setTimeout(
+    applyMobileLayout,
+    300
+  );
+
+
+  /*
+   * Detail screens can populate asynchronously.
+   */
+  const observer =
+    new MutationObserver(
+      () => {
+
+        requestAnimationFrame(
+          applyMobileLayout
+        );
+
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList:true,
+      subtree:true
     }
   );
 
