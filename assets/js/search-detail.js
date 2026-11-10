@@ -1859,11 +1859,23 @@
     `;
   }
 
+  // Prevent an earlier, slower period response from overwriting a newer choice.
+  let activeLoad = null;
+  let loadSequence = 0;
+
   async function load(
     value,
     from = "",
     to = ""
   ) {
+    if (activeLoad) {
+      activeLoad.abort();
+    }
+
+    const controller = new AbortController();
+    activeLoad = controller;
+    const sequence = ++loadSequence;
+
     let suffix =
       `period=${encodeURIComponent(value)}`;
 
@@ -1877,53 +1889,52 @@
     }
 
     try {
-      const [
-        overviewResponse,
-        detailResponse
-      ] =
+      const [overviewResponse, detailResponse] =
         await Promise.all([
-          fetch(
-            `${OVERVIEW}?${suffix}`
-          ),
-          fetch(
-            `${DETAIL}?${suffix}`
-          )
+          fetch(`${OVERVIEW}?${suffix}`, { signal: controller.signal }),
+          fetch(`${DETAIL}?${suffix}`, { signal: controller.signal })
         ]);
 
-      const overview =
-        await overviewResponse.json();
+      const [overview, detail] =
+        await Promise.all([
+          overviewResponse.json(),
+          detailResponse.json()
+        ]);
 
-      const detail =
-        await detailResponse.json();
-
-      if (
-        !overviewResponse.ok ||
-        !overview?.data
-      ) {
-        throw new Error(
-          "overview failed"
-        );
+      // Abort is best-effort: also reject stale completed requests.
+      if (controller.signal.aborted || sequence !== loadSequence) {
+        return;
       }
 
-      renderOverview(
-        overview
-      );
-
-      if (
-        detailResponse.ok &&
-        detail?.ok
-      ) {
-        renderDetail(
-          detail,
-          overview.range
-        );
+      if (!overviewResponse.ok || !overview?.data) {
+        throw new Error("overview failed");
       }
 
+      // Never render another period under the newly selected button.
+      if (overview.range?.period !== value) {
+        throw new Error("overview period mismatch");
+      }
+
+      if (detailResponse.ok && detail?.ok &&
+          (detail.range?.from !== overview.range?.from ||
+           detail.range?.to !== overview.range?.to)) {
+        throw new Error("search detail range mismatch");
+      }
+
+      renderOverview(overview);
+
+      if (detailResponse.ok && detail?.ok) {
+        renderDetail(detail, overview.range);
+      }
     } catch (error) {
-      console.error(
-        "Search Performance:",
-        error
-      );
+      if (controller.signal.aborted || sequence !== loadSequence) {
+        return;
+      }
+      console.error("Search Performance:", error);
+    } finally {
+      if (activeLoad === controller) {
+        activeLoad = null;
+      }
     }
   }
 
