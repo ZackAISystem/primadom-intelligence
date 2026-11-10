@@ -1859,82 +1859,93 @@
     `;
   }
 
-  // Prevent an earlier, slower period response from overwriting a newer choice.
+  // Only the newest selected period may update Search Performance.
+  // Overview (KPIs) must render independently of expensive GSC detail.
   let activeLoad = null;
   let loadSequence = 0;
 
-  async function load(
-    value,
-    from = "",
-    to = ""
-  ) {
-    if (activeLoad) {
-      activeLoad.abort();
-    }
-
+  async function load(value, from = "", to = "") {
+    if (activeLoad) activeLoad.abort();
     const controller = new AbortController();
     activeLoad = controller;
     const sequence = ++loadSequence;
+    const current = () =>
+      !controller.signal.aborted && sequence === loadSequence;
 
-    let suffix =
-      `period=${encodeURIComponent(value)}`;
-
-    if (
-      value === "custom" &&
-      from &&
-      to
-    ) {
-      suffix +=
-        `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    let suffix = `period=${encodeURIComponent(value)}`;
+    if (value === "custom" && from && to) {
+      suffix += `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
     }
 
+    // Immediately clear the prior period's data, so it can never appear
+    // underneath the newly activated button while the network is pending.
+    for (const id of [
+      "searchImpressions", "searchClicks", "searchCtr", "searchPosition",
+      "searchVisiblePages", "searchLatestDate"
+    ]) {
+      const el = $(id);
+      if (el) el.textContent = "—";
+    }
+    if ($("searchCoverageNote")) $("searchCoverageNote").textContent = "Loading selected period…";
+    if ($("searchRangeLabel")) $("searchRangeLabel").textContent = "Loading selected period…";
+    if ($("searchVisibilityChart")) $("searchVisibilityChart").textContent = "Loading…";
+
+    // Launch both calls immediately, but handle detail's rejection immediately
+    // so an overview failure or abort never creates an unhandled rejection.
+    const detailPending = fetch(`${DETAIL}?${suffix}`, {
+      signal: controller.signal
+    }).then(async response => ({ response, data: await response.json() }),
+      error => ({ error }));
+
     try {
-      const [overviewResponse, detailResponse] =
-        await Promise.all([
-          fetch(`${OVERVIEW}?${suffix}`, { signal: controller.signal }),
-          fetch(`${DETAIL}?${suffix}`, { signal: controller.signal })
-        ]);
-
-      const [overview, detail] =
-        await Promise.all([
-          overviewResponse.json(),
-          detailResponse.json()
-        ]);
-
-      // Abort is best-effort: also reject stale completed requests.
-      if (controller.signal.aborted || sequence !== loadSequence) {
-        return;
+      const overviewResponse = await fetch(`${OVERVIEW}?${suffix}`, {
+        signal: controller.signal
+      });
+      const overview = await overviewResponse.json();
+      if (!current()) return;
+      if (!overviewResponse.ok || !overview?.data || !overview?.range) {
+        throw new Error("Search overview unavailable");
+      }
+      if (overview.range.period !== value ||
+          (value === "custom" && (overview.range.from !== from || overview.range.to !== to))) {
+        throw new Error("Search overview returned another period");
       }
 
-      if (!overviewResponse.ok || !overview?.data) {
-        throw new Error("overview failed");
-      }
-
-      // Never render another period under the newly selected button.
-      if (overview.range?.period !== value) {
-        throw new Error("overview period mismatch");
-      }
-
-      if (detailResponse.ok && detail?.ok &&
-          (detail.range?.from !== overview.range?.from ||
-           detail.range?.to !== overview.range?.to)) {
-        throw new Error("search detail range mismatch");
-      }
-
+      // KPI values appear right away; never wait for the slower detail endpoint.
       renderOverview(overview);
+      if ($("searchRangeLabel")) {
+        $("searchRangeLabel").textContent =
+          value === "today" ? "Last 24 hours · loading GSC detail…" :
+          `${overview.range.from} → ${overview.range.to} · loading GSC detail…`;
+      }
 
-      if (detailResponse.ok && detail?.ok) {
-        renderDetail(detail, overview.range);
+      const result = await detailPending;
+      if (!current()) return;
+      if (result.error || !result.response?.ok || !result.data?.ok) {
+        throw new Error("Search breakdown unavailable for selected period");
       }
+      const detail = result.data;
+      if (!detail.range ||
+          detail.range.period !== overview.range.period ||
+          detail.range.from !== overview.range.from ||
+          detail.range.to !== overview.range.to) {
+        throw new Error("Search detail returned a different date range");
+      }
+      renderDetail(detail, overview.range);
     } catch (error) {
-      if (controller.signal.aborted || sequence !== loadSequence) {
-        return;
-      }
+      if (!current()) return;
       console.error("Search Performance:", error);
-    } finally {
-      if (activeLoad === controller) {
-        activeLoad = null;
+      // Keep already-rendered overview KPIs; show the detail failure visibly.
+      if ($("searchRangeLabel")) {
+        $("searchRangeLabel").textContent =
+          "Detailed GSC data unavailable for the selected period";
       }
+      if ($("searchVisibilityChart")) {
+        $("searchVisibilityChart").textContent =
+          "Detailed GSC chart unavailable. The overview remains valid.";
+      }
+    } finally {
+      if (activeLoad === controller) activeLoad = null;
     }
   }
 
