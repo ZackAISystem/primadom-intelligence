@@ -3024,6 +3024,7 @@ function renderDashboard(
       );
 
       if (
+        dashboard.classList.contains("active") &&
         typeof window.showToast ===
         "function"
       ) {
@@ -3057,7 +3058,7 @@ function renderDashboard(
 
   const periodButtons =
     [
-      ...document.querySelectorAll(
+      ...dashboard.querySelectorAll(
         ".period button"
       )
     ];
@@ -3070,7 +3071,7 @@ function renderDashboard(
     );
 
   let lastPresetPeriod =
-    document.querySelector(
+    dashboard.querySelector(
       '.period button.active:not([data-period="Custom"])'
     )?.dataset.period ||
     "7D";
@@ -3697,7 +3698,7 @@ function renderDashboard(
     "primadom_intelligence_period_v1";
 
 
-  document
+  dashboard
     .querySelectorAll(
       ".period button"
     )
@@ -3757,7 +3758,7 @@ function renderDashboard(
   } catch (_) {}
 
 
-  document
+  dashboard
     .querySelectorAll(
       ".period button"
     )

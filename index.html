@@ -3618,9 +3618,9 @@ function showScreen(id){
 navBtns.forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.jump)));
 
-document.querySelectorAll('.period button').forEach(btn=>{
+document.querySelectorAll('#dashboard .period button').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    document.querySelectorAll('.period button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#dashboard .period button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active'); currentPeriod=btn.dataset.period;
     showToast('Period changed to '+currentPeriod);
   });
@@ -3697,7 +3697,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 })();
 </script>
 
-<script src="/assets/js/intelligence-dashboard.js?v=1790321820"></script>
+<script src="/assets/js/intelligence-dashboard.js?v=period-controls-v2"></script>
 
   <script src="/assets/js/traffic-detail.js?v=1790321820"></script>
 
@@ -3799,7 +3799,7 @@ document.querySelectorAll('.page-live-link').forEach(link => {
 </script>
 
 <script src="/assets/js/ai-bots-detail.js?v=20260924193234"></script>
-<script src="/assets/js/search-detail.js?v=period-race-fix-v1"></script>
+<script src="/assets/js/search-detail.js?v=period-controls-v2"></script>
 <script src="/assets/js/pages-detail.js?v=20260924204313"></script>
 <script src="/assets/js/leads-detail.js?v=20260925090851"></script>
 
